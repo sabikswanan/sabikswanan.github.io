@@ -1,0 +1,1624 @@
+<title>Sabik Swanan</title>
+<meta name="description" content="Sabik Swanan — Computer Science undergraduate at BRAC University working on machine learning, remote sensing and software engineering.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a remote-sensing ground station — a live contour map up top, then left-aligned editorial sections read like GIS layers, each tagged with its own coordinate label. */
+:root{
+  --ink:#060d1d;          /* page ground */
+  --deep:#0b1836;         /* raised surfaces */
+  --line:rgba(165,216,255,.14);
+  --fg:#e7f0ff;
+  --muted:#93a6c6;
+  --ice:#a5d8ff;          /* primary accent */
+  --signal:#38bdf8;       /* live data / river */
+  --sand:#f5b860;         /* erosion risk, used sparingly */
+  --on-ice:#06132b;
+  --glass:rgba(11,24,54,.72);
+  --f-display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --gutter:clamp(16px,4.5vw,56px);
+  --max:1180px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ink:#eef3fa;--deep:#ffffff;--line:rgba(10,26,63,.12);--fg:#0a1a3f;--muted:#4d5f82;
+    --ice:#1d4ed8;--signal:#0284c7;--sand:#b45309;--on-ice:#ffffff;--glass:rgba(255,255,255,.8);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --ink:#eef3fa;--deep:#ffffff;--line:rgba(10,26,63,.12);--fg:#0a1a3f;--muted:#4d5f82;
+  --ice:#1d4ed8;--signal:#0284c7;--sand:#b45309;--on-ice:#ffffff;--glass:rgba(255,255,255,.8);
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px;-webkit-text-size-adjust:100%}
+html.lenis{scroll-behavior:auto}
+body{-webkit-tap-highlight-color:transparent}
+a,button,.ball,.btn{touch-action:manipulation}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--ink);color:var(--fg);font:400 16px/1.65 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+::selection{background:var(--ice);color:var(--on-ice)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:6px}
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+.mono{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.06em}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.02em}
+p{margin:0}
+
+/* ---------- progress + header ---------- */
+#progress{position:fixed;top:0;left:0;height:2px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--signal),var(--ice));z-index:60}
+header.top{position:sticky;top:0;z-index:50;background:var(--ink);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--f-display);font-weight:800;font-size:1.05rem}
+.brand i{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);font-style:normal;font-size:.85rem;color:var(--ice);background:var(--deep)}
+nav.links{display:flex;gap:4px;margin-left:auto}
+nav.links a{text-decoration:none;color:var(--muted);font-size:.9rem;padding:8px 12px;border-radius:8px;transition:color .2s,background .2s}
+nav.links a:hover,nav.links a.on{color:var(--fg);background:color-mix(in srgb,var(--ice) 10%,transparent)}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--deep);color:var(--fg);display:grid;place-items:center;cursor:pointer}
+.icon-btn svg{width:18px;height:18px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:.95rem;text-decoration:none;border:1px solid var(--line);cursor:pointer;transition:transform .25s var(--ease),background .25s,border-color .25s;font-family:var(--f-body)}
+.btn:hover{transform:translateY(-2px)}
+.btn.fill{background:var(--ice);color:var(--on-ice);border-color:transparent}
+.btn.ghost{background:transparent;color:var(--fg)}
+.btn.ghost:hover{border-color:var(--ice)}
+.btn.sm{padding:9px 14px;font-size:.85rem}
+.menu-btn{display:none}
+@media (max-width:860px){
+  nav.links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;padding:12px var(--gutter) 18px;background:var(--ink);border-bottom:1px solid var(--line)}
+  nav.links.open{display:flex}
+  .menu-btn{display:grid;margin-left:auto}
+  .top .resume{display:none}
+}
+
+/* ---------- hero ---------- */
+.hero{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
+#map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 0%,color-mix(in srgb,var(--ink) 82%,transparent) 42%,transparent 75%);pointer-events:none}
+.hero .wrap{position:relative;z-index:2;padding-block:clamp(56px,9vw,112px) clamp(40px,6vw,72px);display:grid;gap:28px;pointer-events:none}
+.hero .wrap > *{pointer-events:auto}
+.status{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--glass);width:max-content;max-width:100%;font-size:.85rem;color:var(--muted)}
+.status b{color:var(--fg);font-weight:500}
+.pulse{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.hero h1{font-size:clamp(3rem,10vw,7.4rem);font-weight:800;line-height:.92;letter-spacing:-.045em}
+.hero h1 span{display:block}
+.hero h1 .outline{color:transparent;-webkit-text-stroke:1.5px var(--ice)}
+.role{font-family:var(--f-display);font-size:clamp(1.25rem,2.6vw,1.9rem);font-weight:600;display:flex;flex-wrap:wrap;gap:.35em;align-items:baseline}
+.role .rot{position:relative;display:inline-block;color:var(--ice);min-width:12ch}
+.role .rot span{display:inline-block}
+.pitch{max-width:56ch;color:var(--muted);font-size:1.08rem}
+.pitch strong{color:var(--fg);font-weight:500}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.coords{display:flex;flex-wrap:wrap;gap:18px;color:var(--muted)}
+.coords span b{color:var(--fg);font-weight:500}
+
+.probe{position:absolute;right:var(--gutter);bottom:24px;z-index:3;width:min(300px,calc(100% - 2*var(--gutter)));padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-family:var(--f-mono);font-size:.74rem;line-height:1.7;color:var(--muted)}
+.probe h4{margin:0 0 6px;font:500 .7rem var(--f-mono);letter-spacing:.14em;color:var(--signal);text-transform:uppercase}
+.probe .row{display:flex;justify-content:space-between;gap:10px}
+.probe .row b{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+.probe .bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px}
+.probe .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--signal),var(--sand));transition:width .25s}
+.probe small{display:block;margin-top:6px;font-size:.66rem;opacity:.8}
+@media (max-width:860px){.probe{position:relative;right:auto;bottom:auto;margin:0 var(--gutter) 24px}.hero::after{background:color-mix(in srgb,var(--ink) 72%,transparent)}}
+
+/* ---------- metrics ---------- */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.metric{padding:28px var(--gutter);border-right:1px solid var(--line);display:grid;gap:4px}
+.metric:last-child{border-right:0}
+.metric b{font-family:var(--f-display);font-size:clamp(2rem,4.6vw,3.2rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--fg)}
+.metric b em{font-style:normal;color:var(--ice)}
+.metric span{color:var(--muted);font-size:.88rem}
+@media (max-width:760px){.metrics{grid-template-columns:repeat(2,1fr)}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+
+/* ---------- sections ---------- */
+section.block{padding-block:clamp(64px,9vw,120px);border-bottom:1px solid var(--line)}
+.eyebrow{display:flex;align-items:center;gap:12px;color:var(--signal);text-transform:uppercase;margin-bottom:18px}
+.eyebrow::after{content:"";height:1px;flex:1;max-width:120px;background:var(--line)}
+.sec-title{font-size:clamp(2rem,4.8vw,3.4rem);font-weight:800;line-height:1.02;max-width:20ch}
+.sec-lead{color:var(--muted);max-width:62ch;margin-top:16px;font-size:1.05rem}
+.head{margin-bottom:clamp(32px,5vw,56px)}
+
+/* about */
+.about-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(28px,5vw,64px);align-items:start}
+.about-copy{display:grid;gap:18px;font-size:1.05rem}
+.about-copy p{max-width:62ch}
+.facts{display:grid;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--deep)}
+/* chhobi block: boro portrait, niche gradient er upor naam */
+.photo{position:relative;margin:0;aspect-ratio:4/5;max-height:440px;width:100%;overflow:hidden;border-bottom:1px solid var(--line);background:linear-gradient(135deg,var(--deep),var(--signal))}
+.photo img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block;transition:transform .8s ease}
+.facts:hover .photo img{transform:scale(1.03)}
+.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(6,13,29,.85));pointer-events:none}
+.photo figcaption{position:absolute;left:20px;right:20px;bottom:16px;z-index:1;color:#f1f7ff}
+.photo figcaption b{display:block;font-family:var(--f-display);font-size:1.35rem}
+.photo figcaption span{font-size:.88rem;color:#a5d8ff}
+.photo.nophoto img{display:none}
+.facts .portrait{display:flex;align-items:center;gap:16px;padding:20px;border-bottom:1px solid var(--line)}
+.avatar{width:72px;height:72px;border-radius:18px;flex:none;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:1.6rem;color:var(--on-ice);background:linear-gradient(135deg,var(--signal),var(--ice));overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.facts dl{margin:0;display:grid}
+.facts .f{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);font-size:.92rem}
+.facts .f:last-child{border-bottom:0}
+.facts dt{color:var(--muted);font-family:var(--f-mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;padding-top:2px}
+.facts dd{margin:0}
+@media (max-width:860px){.about-grid{grid-template-columns:1fr}}
+
+/* what I do */
+.do-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.do{padding:26px;border-radius:18px;border:1px solid var(--line);background:var(--deep);display:grid;gap:12px;align-content:start;transition:border-color .3s,transform .3s var(--ease)}
+.do:hover{border-color:var(--ice);transform:translateY(-4px)}
+.do h3{font-size:1.35rem}
+.do p{color:var(--muted);font-size:.95rem}
+.do ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.do li{font-family:var(--f-mono);font-size:.72rem;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.glyph{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--ice) 12%,transparent);color:var(--ice)}
+.glyph svg{width:22px;height:22px}
+@media (max-width:900px){.do-grid{grid-template-columns:1fr}}
+
+/* research pipeline */
+.research{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(28px,5vw,64px);align-items:start}
+.stages{display:grid;gap:10px;counter-reset:st}
+.stage{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:42px minmax(0,1fr);gap:14px;align-items:center;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--deep);transition:border-color .25s,background .25s}
+.stage:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.stage .n{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-mono);font-size:.8rem;border:1px solid var(--line);color:var(--muted)}
+.stage b{display:block;font-weight:600}
+.stage small{color:var(--muted);font-size:.82rem}
+.stage.on{border-color:var(--ice);background:color-mix(in srgb,var(--ice) 8%,var(--deep))}
+.stage.on .n{background:var(--ice);color:var(--on-ice);border-color:transparent}
+.stage-detail{border:1px solid var(--line);border-radius:18px;padding:clamp(22px,3vw,32px);background:var(--deep);display:grid;gap:14px;position:sticky;top:96px}
+.stage-detail h3{font-size:1.6rem}
+.stage-detail p{color:var(--muted)}
+.stage-detail ul{margin:0;padding-left:1.1em;display:grid;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--f-mono);font-size:.72rem;padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--signal) 14%,transparent);color:var(--fg)}
+.thesis-title{font-family:var(--f-display);font-weight:600;font-size:1.05rem;color:var(--fg);border-left:2px solid var(--sand);padding-left:14px;margin-top:20px;max-width:52ch}
+@media (max-width:900px){.research{grid-template-columns:1fr}.stage-detail{position:static}}
+
+/* projects */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.filter{font:500 .85rem var(--f-body);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.filter[aria-pressed="true"]{background:var(--ice);color:var(--on-ice);border-color:transparent}
+.proj-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.proj{position:relative;border:1px solid var(--line);border-radius:20px;background:var(--deep);overflow:hidden;display:grid;grid-template-rows:auto 1fr;transition:border-color .3s,transform .3s var(--ease)}
+.proj:hover{border-color:var(--ice);transform:translateY(-4px)}
+.proj canvas{display:block;width:100%;height:190px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--ink) 60%,var(--deep))}
+.proj .body{padding:22px 24px 24px;display:grid;gap:12px;align-content:start}
+.proj .kind{color:var(--signal)}
+.proj h3{font-size:1.5rem}
+.proj p{color:var(--muted);font-size:.95rem}
+.proj .result{font-family:var(--f-mono);font-size:.8rem;color:var(--fg);padding:8px 12px;border-radius:10px;border:1px dashed var(--line);width:max-content;max-width:100%}
+.proj .result em{font-style:normal;color:var(--sand)}
+.proj .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.proj[hidden]{display:none}
+@media (max-width:860px){.proj-grid{grid-template-columns:1fr}}
+
+/* resume viewer: page er moddhei CV dekhay, popup block holeo kaaj kore */
+dialog.cvd{width:min(860px,calc(100% - 24px));max-height:calc(100% - 32px);border:1px solid var(--line);border-radius:20px;padding:0;background:var(--deep);color:var(--fg);overflow:hidden}
+dialog.cvd::backdrop{background:rgba(3,8,20,.72);backdrop-filter:blur(4px)}
+.cvd-in{display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
+.cvd-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.cvd-bar h3{font-size:1.1rem;margin-right:auto}
+.cvd-pages{overflow:auto;padding:16px;display:grid;gap:16px;background:var(--ink)}
+.cvd-pages img{width:100%;height:auto;display:block;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);background:#fff}
+dialog.case{width:min(760px,calc(100% - 32px));max-height:calc(100% - 48px);border:1px solid var(--line);border-radius:20px;padding:0;background:var(--deep);color:var(--fg)}
+dialog.case::backdrop{background:rgba(3,8,20,.66);backdrop-filter:blur(4px)}
+.case-in{padding:clamp(22px,4vw,36px);display:grid;gap:18px}
+.case-top{display:flex;align-items:start;gap:16px}
+.case-top h3{font-size:1.9rem}
+.case-top .icon-btn{margin-left:auto;flex:none}
+.case-in h4{margin:0 0 6px;font:500 .74rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--signal)}
+.case-in p,.case-in li{color:var(--muted)}
+.case-in ul{margin:0;padding-left:1.1em;display:grid;gap:6px}
+.case-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:640px){.case-cols{grid-template-columns:1fr}}
+
+/* terminal */
+.term{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#050b18;color:#cfe3ff;font-family:var(--f-mono);font-size:.88rem}
+.term .bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(165,216,255,.12);color:#7f93b5;font-size:.75rem}
+.term .bar i{width:11px;height:11px;border-radius:50%;background:#2a3a5c}
+.term .bar i:nth-child(1){background:#f87171}.term .bar i:nth-child(2){background:#fbbf24}.term .bar i:nth-child(3){background:#34d399}
+.term .bar span{margin-left:8px}
+#tout{height:340px;overflow-y:auto;padding:16px 18px;white-space:pre-wrap;word-break:break-word;line-height:1.6}
+#tout .p{color:#38bdf8}
+#tout .k{color:#a5d8ff}
+#tout .s{color:#f5b860}
+#tout .d{color:#7f93b5}
+#tout a{color:#a5d8ff}
+.tin{display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid rgba(165,216,255,.12)}
+.tin label{color:#38bdf8;white-space:nowrap}
+.tin input{flex:1;min-width:0;background:transparent;border:0;color:#e7f0ff;font:inherit;outline:none}
+.hints{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.hint{font:500 .78rem var(--f-mono);padding:6px 11px;border-radius:8px;border:1px solid var(--line);background:var(--deep);color:var(--fg);cursor:pointer}
+
+/* skills */
+.skill-groups{display:grid;gap:28px}
+.sg h3{font-family:var(--f-mono);font-weight:500;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.sg ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px}
+.sk{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--deep);font-size:.9rem;transition:transform .25s var(--ease),border-color .25s}
+.sk:hover{transform:translateY(-3px);border-color:var(--c)}
+.sk svg{width:22px;height:22px;flex:none;fill:var(--c)}
+:root[data-theme="dark"] .sk svg{fill:var(--cd,var(--c))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sk svg{fill:var(--cd,var(--c))}}
+
+/* journey */
+.timeline{position:relative;display:grid;gap:0;margin-left:8px}
+.timeline::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl-fill{position:absolute;left:0;top:6px;width:2px;height:0;background:linear-gradient(var(--signal),var(--ice));transition:height .2s linear}
+.ev{position:relative;padding:0 0 34px 34px;display:grid;grid-template-columns:110px minmax(0,1fr);gap:18px}
+.ev::before{content:"";position:absolute;left:-6px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--ink);border:2px solid var(--ice)}
+.ev .yr{font-family:var(--f-mono);color:var(--signal);font-size:.9rem;padding-top:1px}
+.ev h3{font-size:1.2rem;font-family:var(--f-body);font-weight:600;letter-spacing:0}
+.ev p{color:var(--muted);font-size:.95rem}
+@media (max-width:640px){.ev{grid-template-columns:1fr;gap:4px}}
+
+/* certifications */
+.cert-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.panel{border:1px solid var(--line);border-radius:18px;background:var(--deep);overflow:hidden}
+.panel h3{display:flex;align-items:center;gap:10px;font-size:1.1rem;padding:18px 20px;border-bottom:1px solid var(--line)}
+.panel h3 svg{width:20px;height:20px}
+.row-link{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);text-decoration:none;font-size:.95rem}
+.row-link:last-child{border-bottom:0}
+.row-link span:last-child{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);white-space:nowrap}
+a.row-link:hover{background:color-mix(in srgb,var(--ice) 7%,transparent)}
+a.row-link:hover span:last-child{color:var(--ice)}
+@media (max-width:860px){.cert-grid{grid-template-columns:1fr}}
+
+/* certificate gallery: chhobi thakle chhobi, na thakle designed cover */
+.cert-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.cert{position:relative;display:grid;grid-template-rows:auto 1fr;border:1px solid var(--line);border-radius:18px;background:var(--deep);overflow:hidden;text-decoration:none;color:inherit;transition:border-color .3s,box-shadow .3s}
+.cert:hover{border-color:color-mix(in srgb,var(--ice) 55%,var(--line));box-shadow:0 18px 40px -18px color-mix(in srgb,var(--signal) 55%,transparent)}
+.cert-thumb{all:unset;cursor:zoom-in;position:relative;display:block;aspect-ratio:1136/654;overflow:hidden;background:radial-gradient(120% 90% at 80% 10%,#1e4fa8 0%,#0b1836 55%,#060d1d 100%)}
+.cert-thumb:focus-visible{outline:2px solid var(--ice);outline-offset:-4px}
+.cert-cover{position:absolute;inset:0;display:grid;place-items:center;padding:14px;color:#e8f3ff}
+.cert-cover small{position:absolute;left:14px;top:12px}
+.cert-cover em{position:absolute;left:14px;bottom:12px;font-style:normal;font-family:var(--f-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:color-mix(in srgb,#a5d8ff 70%,transparent)}
+.cert-cover small{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#a5d8ff}
+.cert-cover .seal{width:64px;height:64px;border-radius:50%;border:1.5px dashed color-mix(in srgb,#a5d8ff 70%,transparent);display:grid;place-items:center;animation:spin 16s linear infinite;box-shadow:0 0 30px -6px #38bdf8}
+.cert-cover .seal svg{width:30px;height:30px;fill:#a5d8ff}
+.cert-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s,transform .8s var(--ease)}
+.cert-thumb.has img{opacity:1}
+.cert-thumb.has .cert-cover{display:none}
+.cert:hover .cert-thumb img{transform:scale(1.04)}
+.cert-thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);transform:translateX(-120%);transition:transform .9s var(--ease);pointer-events:none}
+.cert:hover .cert-thumb::after{transform:translateX(120%)}
+.cert-meta{display:grid;gap:6px;padding:14px 16px;align-content:start}
+.cert-meta h4{margin:0;font-size:.98rem;font-weight:600}
+.cert-meta p{margin:0;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.04em;color:var(--muted)}
+.cert-meta a{font-family:var(--f-mono);font-size:.74rem;margin-top:2px}
+.cert-meta a{color:var(--ice);text-decoration:none}
+.cert-meta a:hover{text-decoration:underline}
+.cert-grid.one{grid-template-columns:1fr}
+@media (max-width:900px){.cert-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cert-thumb{border-bottom:1px solid var(--line)}
+#lbVerify[hidden]{display:none}
+.cert-view{position:absolute;right:10px;bottom:10px;z-index:1;font-family:var(--f-mono);font-size:.7rem;padding:5px 9px;border-radius:999px;background:rgba(6,13,29,.78);color:#e8f3ff;border:1px solid rgba(165,216,255,.35);opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s var(--ease)}
+.cert:hover .cert-view,.cert-thumb:focus-visible .cert-view{opacity:1;transform:none}
+@media (hover:none){.cert-view{opacity:1;transform:none}}
+/* chhoto card e seal ar lekha jate gaye gaye na lage */
+@media (max-width:640px){
+  .cert-gallery{gap:12px}
+  .cert-cover small,.cert-cover em{font-size:.54rem;letter-spacing:.1em}
+  .cert-cover small{left:10px;top:8px}.cert-cover em{left:10px;bottom:8px}
+  .cert-cover .seal{width:42px;height:42px}
+  .cert-cover .seal svg{width:19px;height:19px}
+  .cert-meta{padding:12px}
+  .cert-meta h4{font-size:.9rem}
+  .cert-meta p{font-size:.6rem}
+}
+dialog.lightbox{width:min(1000px,calc(100% - 24px));border:1px solid var(--line);border-radius:18px;padding:0;background:var(--deep);color:var(--fg);overflow:hidden}
+dialog.lightbox::backdrop{background:rgba(3,8,20,.8);backdrop-filter:blur(5px)}
+dialog.lightbox[open]{animation:pop .35s var(--ease)}
+.lb-bar{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.lb-bar h3{font-size:1rem;margin-right:auto}
+.lightbox img{display:block;width:100%;height:auto;max-height:78vh;object-fit:contain;background:var(--ink)}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+
+/* contact */
+.contact{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,64px);align-items:start}
+.big-mail{font-family:var(--f-display);font-weight:800;font-size:clamp(1.4rem,3.4vw,2.4rem);letter-spacing:-.02em;word-break:break-all;color:var(--ice)}
+.mail-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:12px}
+.socials{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+form.msg{display:grid;gap:14px;padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--deep)}
+form.msg label{display:grid;gap:6px;font-size:.85rem;color:var(--muted)}
+form.msg input,form.msg textarea{font:inherit;color:var(--fg);background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;resize:vertical}
+form.msg input:focus,form.msg textarea:focus{outline:none;border-color:var(--signal)}
+form.msg small{color:var(--muted);font-size:.78rem}
+.toast{font-family:var(--f-mono);font-size:.78rem;color:#34d399;min-height:1.2em}
+@media (max-width:860px){.contact{grid-template-columns:1fr}}
+
+footer{padding-block:28px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;color:var(--muted)}
+
+/* cursor (fine pointers only) */
+#cur{position:fixed;left:0;top:0;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:1.5px solid var(--ice);pointer-events:none;z-index:80;opacity:0;transition:width .2s,height .2s,margin .2s,opacity .3s,background .2s;mix-blend-mode:normal}
+#cur.big{width:54px;height:54px;margin:-27px 0 0 -27px;background:color-mix(in srgb,var(--ice) 12%,transparent)}
+@media (pointer:coarse){#cur{display:none}}
+
+/* loader */
+
+/* ================= intro: "Hi, this is Sabik Swanan" ================= */
+#intro{position:fixed;inset:0;z-index:95;pointer-events:auto}
+#intro.gone{display:none}
+.in-panel{position:absolute;inset:0;will-change:transform;transition:transform 1s cubic-bezier(.76,0,.24,1)}
+.in-a{background:var(--ice)}
+.in-b{background:var(--ink);display:grid;place-items:center;overflow:hidden;transition-delay:.0s}
+#intro.out .in-b{transform:translateY(-100%)}
+#intro.out .in-a{transform:translateY(-100%);transition-delay:.12s}
+.in-river{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.55}
+.in-river path{fill:none;stroke:var(--signal);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.4s cubic-bezier(.65,0,.35,1) .15s forwards;filter:drop-shadow(0 0 8px var(--signal))}
+.in-river path.thin{stroke-width:1;opacity:.5;animation-delay:.45s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.in-core{position:relative;padding:0 var(--gutter);text-align:left;width:min(1100px,100%)}
+.in-hi{font-family:var(--f-mono);font-size:clamp(.95rem,2vw,1.25rem);color:var(--signal);margin:0 0 .4em;min-height:1.6em;letter-spacing:.04em}
+.in-caret{display:inline-block;width:.6em;height:1.1em;vertical-align:-.15em;margin-left:3px;background:var(--signal);animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.in-name{margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(3.2rem,13vw,10.5rem);line-height:.95;letter-spacing:-.045em;display:flex;flex-wrap:wrap;column-gap:.25em}
+.in-word{display:inline-flex;overflow:hidden;padding-bottom:.08em}
+.in-l{display:inline-block;transform:translateY(110%);transition:transform .9s cubic-bezier(.16,1,.3,1);transition-delay:calc(var(--i) * 45ms)}
+.in-word.w2 .in-l{color:transparent;-webkit-text-stroke:2px var(--ice)}
+.in-word.w1 .in-l{background:linear-gradient(180deg,var(--fg),var(--ice));-webkit-background-clip:text;background-clip:text;color:transparent}
+#intro.show .in-l{transform:none}
+#intro.lift .in-l{transform:translateY(-110%);transition:transform .55s cubic-bezier(.7,0,.84,0);transition-delay:calc(var(--i) * 22ms)}
+.in-role{margin:.9em 0 0;font-family:var(--f-mono);font-size:clamp(.72rem,1.5vw,.9rem);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s var(--ease)}
+.in-role i{font-style:normal;color:var(--signal);margin:0 .5em}
+#intro.role .in-role{opacity:1;transform:none}
+#intro.lift .in-role,#intro.lift .in-hi,#intro.lift .in-foot,#intro.lift .in-skip{opacity:0;transition:opacity .3s}
+.in-foot{position:absolute;left:var(--gutter);right:var(--gutter);bottom:34px;display:flex;justify-content:space-between;align-items:end;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.in-count{font-size:.9rem;color:var(--fg)}
+.in-count b{font-family:var(--f-display);font-size:clamp(2rem,5vw,3.4rem);font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--fg)}
+.in-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line)}
+.in-bar i{display:block;height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--signal),var(--ice))}
+.in-skip{position:absolute;top:22px;right:var(--gutter);font:500 .74rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer}
+.in-skip:hover{color:var(--fg);border-color:var(--ice)}
+@media (max-width:560px){.hide-sm{display:none}.in-foot{bottom:24px}}
+
+/* ================= tech marquee ================= */
+.marquee{overflow:hidden;border-block:1px solid var(--line);padding:18px 0;-webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.mq-track{display:flex;width:max-content;gap:12px;animation:mq 46s linear infinite}
+.marquee:hover .mq-track{animation-play-state:paused}
+@keyframes mq{to{transform:translateX(-50%)}}
+.mq-item{display:inline-flex;align-items:center;gap:10px;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:var(--deep);font-size:.9rem;white-space:nowrap;color:var(--fg)}
+.mq-item svg{width:20px;height:20px;fill:var(--c)}
+:root[data-theme="dark"] .mq-item svg{fill:var(--cd,var(--c))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .mq-item svg{fill:var(--cd,var(--c))}}
+.mq-sep{color:var(--signal);align-self:center;font-size:.8rem}
+
+/* ================= back to top + progress ring ================= */
+#toTop{position:fixed;right:20px;bottom:20px;z-index:60;width:50px;height:50px;padding:0;border:0;border-radius:50%;background:var(--deep);border:1px solid var(--line);color:var(--ice);cursor:pointer;opacity:0;transform:translateY(16px) scale(.9);pointer-events:none;transition:opacity .3s,transform .3s var(--ease);box-shadow:0 10px 30px -12px rgba(0,0,0,.5)}
+#toTop.on{opacity:1;transform:none;pointer-events:auto}
+#toTop:hover{transform:translateY(-3px)}
+#toTop svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#toTop .trk{stroke:var(--line)}
+#toTop .val{stroke:var(--signal);transform:rotate(-90deg);transform-origin:50% 50%;stroke-dasharray:119.4;stroke-dashoffset:119.4}
+@media (prefers-reduced-motion: reduce){.mq-track{animation:none;flex-wrap:wrap}}
+
+/* ================= coursework ball pit ================= */
+.pit-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.pit-legend{display:flex;flex-wrap:wrap;gap:8px}
+.pit-legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);padding:5px 10px;border:1px solid var(--line);border-radius:999px}
+.pit-legend i{width:10px;height:10px;border-radius:50%;background:var(--bc);box-shadow:inset 0 0 0 1px rgba(10,26,63,.25)}
+.pit{position:relative;height:470px;border:1px solid var(--line);border-radius:22px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(90% 70% at 50% 110%,color-mix(in srgb,var(--signal) 16%,transparent),transparent 70%),linear-gradient(180deg,var(--ink),var(--deep));
+  background-image:radial-gradient(90% 70% at 50% 110%,color-mix(in srgb,var(--signal) 16%,transparent),transparent 70%),radial-gradient(circle,var(--line) 1px,transparent 1.5px);background-size:auto,22px 22px}
+@media (max-width:560px){.pit{height:440px}}
+.pit-hint{position:absolute;left:50%;top:16px;transform:translateX(-50%);margin:0;color:var(--muted);opacity:.7;pointer-events:none;white-space:nowrap}
+.ball{position:absolute;left:0;top:0;border-radius:50%;display:grid;place-items:center;align-content:center;text-align:center;cursor:grab;will-change:transform;
+  background:radial-gradient(circle at 32% 28%,color-mix(in srgb,#fff 55%,var(--bc)) 0%,var(--bc) 42%,color-mix(in srgb,#000 35%,var(--bc)) 100%);
+  color:var(--bt,#06132b);box-shadow:inset -6px -10px 18px rgba(0,0,0,.22),0 10px 22px -10px rgba(0,0,0,.55);transition:box-shadow .2s,filter .2s;touch-action:none}
+.ball b{font-family:var(--f-display);font-weight:800;line-height:1;letter-spacing:-.02em;font-size:calc(var(--r) * .5)}
+.ball small{font-family:var(--f-mono);font-weight:500;font-size:max(8px,calc(var(--r) * .21));letter-spacing:.14em;line-height:1;margin-bottom:2px;opacity:.75}
+.ball.built::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1.5px dashed var(--bc);animation:spin 12s linear infinite;opacity:.8}
+.ball:hover{filter:brightness(1.08)}
+.ball.drag{cursor:grabbing;filter:brightness(1.12);box-shadow:inset -6px -10px 18px rgba(0,0,0,.22),0 18px 40px -12px var(--bc)}
+.ball.sel{box-shadow:inset -6px -10px 18px rgba(0,0,0,.22),0 0 0 3px var(--ink),0 0 0 5px var(--bc),0 14px 30px -10px var(--bc)}
+.pit-card{margin-top:14px;display:grid;gap:4px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--deep);min-height:96px;transition:border-color .3s}
+.pit-card.on{border-color:color-mix(in srgb,var(--ice) 45%,var(--line))}
+.pit-card span{color:var(--signal)}
+.pit-card b{font-family:var(--f-display);font-size:1.25rem}
+.pit-card p{margin:0;color:var(--muted)}
+.pit-card a,.pit-card button.lnk{all:unset;cursor:pointer;color:var(--ice);font-weight:600}
+.pit-card a:hover,.pit-card button.lnk:hover{text-decoration:underline}
+.pit.static{height:auto;display:flex;flex-wrap:wrap;gap:12px;padding:20px;justify-content:center}
+.pit.static .ball{position:relative;transform:none !important}
+
+/* ================= animation round 2 ================= */
+/* nav e active link er niche sliding pill */
+nav.links{position:relative}
+.nav-ind{position:absolute;top:0;left:0;height:100%;border-radius:8px;background:color-mix(in srgb,var(--ice) 13%,transparent);box-shadow:inset 0 -2px 0 var(--signal);pointer-events:none;opacity:0;transition:transform .45s cubic-bezier(.2,.9,.2,1),width .45s cubic-bezier(.2,.9,.2,1),opacity .3s;z-index:-1}
+nav.links.has-ind a.on,nav.links.has-ind a:hover{background:transparent}
+@media (max-width:860px){.nav-ind{display:none}}
+/* primary button e majhe majhe alo chole jay */
+.btn{position:relative;overflow:hidden;isolation:isolate}
+.btn.fill::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%);animation:shine 5s ease-in-out 3.5s infinite;pointer-events:none}
+@keyframes shine{0%,72%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+/* click korle ripple */
+.ripple{position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(0);background:currentColor;opacity:.25;pointer-events:none;animation:ripple .6s ease-out forwards;z-index:-1}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+/* email er okkhor gula hover e dheu er moto */
+.big-mail .lt{display:inline-block;transition:transform .35s cubic-bezier(.3,1.6,.5,1),color .3s}
+.big-mail:hover .lt{transform:translateY(-.18em);color:var(--signal);transition-delay:calc(var(--i) * 18ms)}
+/* eyebrow decode effect */
+.eyebrow .dec{display:inline-block;min-width:1ch}
+/* hero glow orb mouse er pechone pechone */
+.orb{position:absolute;width:520px;height:520px;border-radius:50%;left:0;top:0;pointer-events:none;z-index:1;background:radial-gradient(circle,color-mix(in srgb,var(--signal) 20%,transparent),transparent 65%);opacity:.0;transition:opacity .6s;will-change:transform}
+.hero:hover .orb{opacity:1}
+/* section er pechone halka aurora */
+.block{position:relative;overflow-x:clip}
+.block::before{content:"";position:absolute;width:min(620px,80vw);aspect-ratio:1;right:-12%;top:8%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--signal) 9%,transparent),transparent 62%);pointer-events:none;z-index:-1;animation:drift 18s ease-in-out infinite alternate}
+.block:nth-of-type(even)::before{left:-14%;right:auto;top:30%;animation-duration:22s;background:radial-gradient(circle,color-mix(in srgb,var(--ice) 8%,transparent),transparent 62%)}
+@keyframes drift{to{transform:translate(-40px,60px) scale(1.12)}}
+/* photo card halka bhashe thake */
+.facts{animation:floaty 6s ease-in-out infinite}
+@keyframes floaty{50%{translate:0 -6px}}
+@media (prefers-reduced-motion: reduce){.btn.fill::after,.block::before,.facts{animation:none}.orb{display:none}}
+
+/* ================= performance: phone / touch e continuous animation kom ================= */
+@media (max-width:860px),(pointer:coarse){
+  .block::before{animation:none}
+  .facts{animation:none}
+  .facts::before{animation:none;background:conic-gradient(from 200deg,transparent 0 62%,var(--signal) 78%,var(--ice) 88%,transparent 97%)}
+  .hero h1 .outline{animation:none}
+  .ball.built::after{animation:none}
+  .btn.fill::after{animation-iteration-count:2}
+  .pit{background-image:radial-gradient(90% 70% at 50% 110%,color-mix(in srgb,var(--signal) 16%,transparent),transparent 70%)}
+}
+.block,.hero,.marquee{contain:paint}
+
+
+/* ================= section transition: river divider + boro number =================
+   protita section er upore ekta nodi-r moto dheu line, scroll er sathe nije eke jay,
+   line er upor diye ekta glowing probe chole; pashe boro outline section number parallax e nore */
+section.block{border-bottom:0}
+.rdiv{position:absolute;left:0;right:0;top:0;height:56px;pointer-events:none;z-index:1}
+.rdiv svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.rdiv .base{fill:none;stroke:var(--line);stroke-width:1}
+.rdiv .flow{fill:none;stroke:url(#rgrad);stroke-width:2;stroke-linecap:round;stroke-dasharray:1 1;stroke-dashoffset:calc(1 - var(--p,0));filter:drop-shadow(0 0 4px var(--signal))}
+.rdiv .rprobe{position:absolute;left:0;top:0;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--ice);box-shadow:0 0 0 4px color-mix(in srgb,var(--signal) 25%,transparent),0 0 14px 2px var(--signal);opacity:calc(var(--p,0) * 4);will-change:transform}
+.rdiv .tag{position:absolute;left:var(--gutter);top:46px;font-family:var(--f-mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--signal);background:var(--ink);padding:2px 8px 2px 0;opacity:calc(var(--p,0) * 3)}
+.rdiv .tag b{color:var(--fg);font-weight:500}
+.secnum{position:absolute;right:var(--gutter);top:clamp(40px,6vw,80px);font-family:var(--f-display);font-weight:800;font-size:clamp(6rem,17vw,14rem);line-height:.8;letter-spacing:-.06em;color:transparent;-webkit-text-stroke:1.5px color-mix(in srgb,var(--ice) 22%,transparent);pointer-events:none;user-select:none;z-index:0;
+  transform:translateY(calc((1 - var(--q,0)) * 90px));opacity:calc(.2 + var(--q,0) * .8)}
+section.block > .wrap{position:relative;z-index:1}
+@media (max-width:560px){.secnum{font-size:6.5rem;top:30px}}
+@media (prefers-reduced-motion: reduce){.rdiv .flow{stroke-dashoffset:0}.rdiv .rprobe{display:none}.rdiv .tag{opacity:1}.secnum{transform:none;opacity:1}}
+
+/* ================= extra animation ================= */
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ring{to{--ang:360deg}}
+/* upore scroll progress bar */
+#prog{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--signal),var(--ice));z-index:75;pointer-events:none}
+/* hero er naam: protiti okkhor niche theke uthe ashe */
+.hero h1 > span{overflow:hidden;padding-bottom:.06em}
+.hero h1 .ch{display:inline-block;transform:translateY(110%) rotate(8deg);opacity:0;animation:rise 1s var(--ease) forwards;animation-delay:calc(var(--i) * 55ms + 120ms);animation-play-state:paused}
+html.go .hero h1 .ch{animation-play-state:running}
+@keyframes rise{to{transform:none;opacity:1}}
+/* outline naam e halka light sweep */
+.hero h1 .outline{background:linear-gradient(100deg,transparent 40%,color-mix(in srgb,var(--ice) 55%,transparent) 50%,transparent 60%) no-repeat;background-size:250% 100%;background-position:150% 0;-webkit-background-clip:text;background-clip:text;animation:sweep 5s ease-in-out 2.2s 3}
+@keyframes sweep{0%{background-position:150% 0}55%,100%{background-position:-50% 0}}
+/* reveal e fade + blur, js thaklei shudhu */
+html.js .reveal{opacity:0;transition:transform .5s var(--ease),opacity .45s ease-out,border-color .3s,box-shadow .3s}
+html.js .reveal.in{opacity:1}
+html.js .reveal.settled{transition:transform .3s var(--ease),border-color .3s,box-shadow .3s}
+.ev.reveal{transform:translateX(-14px)}
+.ev::before{transition:transform .5s var(--ease) .2s,background .4s .2s}
+html.js .ev.reveal:not(.in)::before{transform:scale(0)}
+.ev.reveal.in::before{background:var(--ice)}
+/* section title: shobdo gula ekta ekta kore ashe */
+.sec-title .w{display:inline-block;transform:translateY(.55em);opacity:0;transition:transform .45s var(--ease),opacity .45s ease-out;transition-delay:calc(var(--i) * 35ms)}
+.sec-title.on .w{transform:none;opacity:1}
+/* skill chip pop-in */
+html.js .sg li{opacity:0;transform:translateY(12px) scale(.94)}
+.sg.pop li{animation:chip .35s var(--ease) forwards;animation-delay:calc(var(--i) * 18ms)}
+@keyframes chip{to{opacity:1;transform:none}}
+/* photo card er charpashe ghurte thaka glow border */
+.facts{position:relative;isolation:isolate}
+.facts::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--ang),transparent 0 62%,var(--signal) 78%,var(--ice) 88%,transparent 97%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ring 6s linear infinite;z-index:3;pointer-events:none}
+/* card e mouse er sathe spotlight */
+.spot{--mx:50%;--my:50%}
+.spot .glow{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;opacity:0;transition:opacity .35s;background:radial-gradient(380px circle at var(--mx) var(--my),color-mix(in srgb,var(--ice) 13%,transparent),transparent 45%)}
+.spot:hover .glow{opacity:1}
+.tilting{transition:transform .12s linear !important}
+@media (prefers-reduced-motion: reduce){
+  html.js .reveal,html.js .sg li,.sec-title .w,.hero h1 .ch{opacity:1;filter:none;transform:none;animation:none}
+  .facts::before,.cert-cover .seal,.hero h1 .outline{animation:none}
+  #prog{display:none}
+}
+
+.reveal{transform:translateY(12px);transition:transform .8s var(--ease)}
+.reveal.in{transform:none}
+.do.reveal.in:hover,.proj.reveal.in:hover{transform:translateY(-4px)}
+.sk:hover{transform:translateY(-3px)}
+@media (prefers-reduced-motion: reduce){.reveal{transform:none}.pulse{animation:none}#cur{display:none}}
+</style>
+
+<div id="progress"></div>
+<div id="prog" aria-hidden="true"></div>
+<button id="toTop" type="button" aria-label="Back to top"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" class="trk"/><circle cx="22" cy="22" r="19" class="val" id="toTopRing"/><path d="M22 28V16M16.5 21.5L22 16l5.5 5.5"/></svg></button>
+<div id="intro" role="status" aria-label="Loading Sabik Swanan's portfolio">
+  <div class="in-panel in-a"></div>
+  <div class="in-panel in-b">
+    <svg class="in-river" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M930-20C760 160 1060 300 880 470S720 700 860 830"/><path class="thin" pathLength="1" d="M990-20C820 160 1120 300 940 470S780 700 920 830"/></svg>
+    <div class="in-core">
+      <p class="in-hi"><span id="inType"></span><i class="in-caret"></i></p>
+      <h2 class="in-name" id="inName" aria-label="Sabik Swanan"></h2>
+      <p class="in-role">Machine learning <i>·</i> Data science <i>·</i> Software</p>
+    </div>
+    <div class="in-foot"><span>Dhaka, Bangladesh</span><span class="hide-sm">Portfolio © 2026</span><span class="in-count"><b id="inCount">000</b>%</span></div>
+    <div class="in-bar"><i id="inBar"></i></div>
+    <button class="in-skip" id="inSkip" type="button">Skip intro →</button>
+  </div>
+</div>
+<div id="cur" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><i>SS</i> Sabik Swanan</a>
+    <nav class="links" id="nav" aria-label="Sections">
+      <a href="#about">About</a>
+      <a href="#research">Research</a>
+      <a href="#work">Work</a>
+      <a href="#terminal">Terminal</a>
+      <a href="#skills">Skills</a>
+      <a href="#courses">Courses</a>
+      <a href="#journey">Journey</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch colour theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg></button>
+    <a class="btn fill sm resume" href="Sabik_Swanan_CV.pdf" target="_blank" rel="noopener" data-cv>Résumé ↗</a>
+    <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" aria-label="Introduction">
+  <canvas id="map" aria-hidden="true"></canvas>
+  <div class="orb" id="orb" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="status"><span class="pulse"></span><b>Open to opportunities</b></span>
+    <h1><span>Sabik</span><span class="outline">Swanan</span></h1>
+    <p class="role">I work on <span class="rot" id="rot"><span>machine learning</span></span></p>
+    <p class="pitch">Computer Science undergraduate at <strong>BRAC University</strong>. I teach models to read satellite imagery of Bangladesh's rivers, and I build the web apps, games and networks around the data.</p>
+    <div class="cta">
+      <a class="btn fill" href="#work">See my work</a>
+      <a class="btn ghost" href="Sabik_Swanan_CV.pdf" target="_blank" rel="noopener" data-cv>Résumé ↗</a>
+      <a class="btn ghost" href="#contact">Get in touch</a>
+    </div>
+    <div class="coords mono"><span>DHAKA <b>23.81°N 90.41°E</b></span><span>LOCAL TIME <b id="clock">--:--:--</b></span></div>
+  </div>
+  <div class="probe" id="probe" aria-live="off">
+    <h4>Bank probe · Jamuna</h4>
+    <div class="row"><span>Latitude</span><b id="pLat">24.452° N</b></div>
+    <div class="row"><span>Longitude</span><b id="pLon">89.703° E</b></div>
+    <div class="row"><span>Distance to channel</span><b id="pDist">0.42 km</b></div>
+    <div class="row"><span>Erosion risk</span><b id="pRisk">0.61</b></div>
+    <div class="bar"><i id="pBar"></i></div>
+    <small>Move over the map to probe it. Illustrative terrain, not model output.</small>
+  </div>
+</section>
+
+<div class="metrics" aria-label="Highlights">
+  <div class="metric"><b data-count="4">4</b><span>shipped projects</span></div>
+  <div class="metric"><b data-count="50000" data-fmt="k">50<em>K</em></b><span>regions in my ML benchmark</span></div>
+  <div class="metric"><b data-count="36">36</b><span>REST endpoints built</span></div>
+  <div class="metric"><b data-count="63" data-suffix="+">63<em>+</em></b><span>Codeforces problems solved</span></div>
+</div>
+
+<div class="marquee" aria-hidden="true"><div class="mq-track" id="mqTrack"></div></div>
+
+<section class="block" id="about">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">About</p><h2 class="sec-title">Data in, decisions out.</h2></div>
+    <div class="about-grid">
+      <div class="about-copy reveal">
+        <p>I'm a Computer Science undergraduate at BRAC University in Dhaka. Most of my time goes into applied machine learning: cleaning messy data, comparing models honestly, and explaining what they learned.</p>
+        <p>My thesis asks a question that matters a lot in Bangladesh: <strong>where will a river bank erode next?</strong> I'm building a pipeline that reads decades of satellite imagery of the Jamuna, predicts erosion risk, and writes the result up in plain language.</p>
+        <p>Outside research I like shipping complete things: a MERN travel platform with AI itineraries, a 3D tank game written from scratch in OpenGL, and a six-site enterprise network with automatic failover.</p>
+        <div class="cta"><a class="btn ghost sm" href="#research">Read about the thesis</a><a class="btn ghost sm" href="https://github.com/sabikswanan" target="_blank" rel="noopener">GitHub ↗</a></div>
+      </div>
+      <div class="facts reveal">
+        <figure class="photo">
+          <img src="profile.jpg" alt="Sabik Swanan" width="720" height="900" decoding="async" onerror="this.parentNode.classList.add('nophoto')">
+          <figcaption><b>Sabik Swanan</b><span>ML · Data Science · Software</span></figcaption>
+        </figure>
+        <dl>
+          <div class="f"><dt>Studying</dt><dd>B.Sc. in Computer Science, BRAC University (2022 – present)</dd></div>
+          <div class="f"><dt>Based in</dt><dd>Dhaka, Bangladesh</dd></div>
+          <div class="f"><dt>Thesis</dt><dd>Riverbank erosion prediction with ML/DL and an LLM report layer</dd></div>
+          <div class="f"><dt>Award</dt><dd>The Duke of Edinburgh's International Award, Bronze</dd></div>
+          <div class="f"><dt>Languages</dt><dd>English (advanced), Bengali (native), Spanish (beginner)</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="focus" aria-label="What I do">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">What I do</p><h2 class="sec-title">Three kinds of problems I like.</h2></div>
+    <div class="do-grid">
+      <article class="do reveal"><div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 16l4-5 3 3 5-7"/><circle cx="18" cy="7" r="1.6"/></svg></div><h3>Machine learning and data</h3><p>Turning raw tables and satellite imagery into models I can defend: clean features, fair benchmarks, explainable results.</p><ul><li>scikit-learn</li><li>TensorFlow</li><li>SHAP</li><li>Earth Engine</li></ul></article>
+      <article class="do reveal"><div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M9 9l-2 2 2 2M15 9l2 2-2 2"/></svg></div><h3>Full-stack web</h3><p>End-to-end apps with real auth, roles, payments and third-party APIs, deployed and documented.</p><ul><li>React</li><li>Express</li><li>MongoDB</li><li>Gemini API</li></ul></article>
+      <article class="do reveal"><div class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div><h3>Graphics and systems</h3><p>Low-level work where the math shows: game physics in OpenGL, routing tables and failover in network design.</p><ul><li>PyOpenGL</li><li>Packet Tracer</li><li>VLSM</li><li>RIP</li></ul></article>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="research">
+  <div class="wrap">
+    <div class="head reveal">
+      <p class="eyebrow mono">Current research · undergraduate thesis</p>
+      <h2 class="sec-title">Predicting where the Jamuna eats its banks.</h2>
+      <p class="sec-lead">Riverbank erosion displaces thousands of families in Bangladesh every year. My thesis builds a pipeline from satellite imagery to an erosion-risk map and a plain-language report. Click a stage to see what it does.</p>
+      <p class="thesis-title">A Hybrid ML/DL Framework with LLM Integration for Bangladesh-Wide Riverbank Erosion Prediction Using Multi-Temporal Satellite Data</p>
+    </div>
+    <div class="research">
+      <div class="stages" role="tablist" aria-label="Pipeline stages" id="stages"></div>
+      <div class="stage-detail" id="stageDetail" role="tabpanel" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="work">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">Selected work</p><h2 class="sec-title">Four projects, four different stacks.</h2><p class="sec-lead">Each one is documented on GitHub. Open a card for the full case study.</p></div>
+    <div class="filters" role="group" aria-label="Filter projects">
+      <button class="filter" type="button" data-f="all" aria-pressed="true">All</button>
+      <button class="filter" type="button" data-f="ml" aria-pressed="false">Machine learning</button>
+      <button class="filter" type="button" data-f="web" aria-pressed="false">Web</button>
+      <button class="filter" type="button" data-f="graphics" aria-pressed="false">Graphics</button>
+      <button class="filter" type="button" data-f="networks" aria-pressed="false">Networks</button>
+    </div>
+    <div class="proj-grid" id="projGrid"></div>
+  </div>
+</section>
+
+<dialog class="lightbox" id="lightbox" aria-labelledby="lbTitle"><div class="lb-bar"><h3 id="lbTitle"></h3><a class="btn ghost sm" id="lbVerify" target="_blank" rel="noopener">Verify ↗</a><button class="icon-btn" type="button" id="lbClose" aria-label="Close certificate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><img id="lbImg" alt=""></dialog>
+<dialog class="cvd" id="cvd" aria-labelledby="cvdTitle"><div class="cvd-in">
+  <div class="cvd-bar"><h3 id="cvdTitle">Résumé · Sabik Swanan</h3>
+    <a class="btn fill sm" id="cvDownload" href="Sabik_Swanan_CV.pdf" download="Sabik_Swanan_CV.pdf">Download PDF</a>
+    <button class="icon-btn" type="button" id="cvdClose" aria-label="Close résumé"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="cvd-pages"><img src="cv-page-1.jpg" alt="Résumé page 1" width="1241" height="1754" loading="lazy"><img src="cv-page-2.jpg" alt="Résumé page 2" width="1241" height="1754" loading="lazy"></div>
+</div></dialog>
+<dialog class="case" id="case" aria-labelledby="caseTitle"><div class="case-in" id="caseIn"></div></dialog>
+
+<section class="block" id="terminal">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">Interactive</p><h2 class="sec-title">Ask my terminal.</h2><p class="sec-lead">Prefer the command line? Type <code>help</code>, or tap a command below.</p></div>
+    <div class="term reveal">
+      <div class="bar"><i></i><i></i><i></i><span>sabik@bracu: ~/portfolio</span></div>
+      <div id="tout" role="log" aria-live="polite"></div>
+      <form class="tin" id="tform" autocomplete="off"><label for="tcmd">sabik@bracu:~$</label><input id="tcmd" type="text" spellcheck="false" aria-label="Terminal command" placeholder="type a command…"></form>
+    </div>
+    <div class="hints" id="hints"></div>
+  </div>
+</section>
+
+<section class="block" id="skills">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">Toolbox</p><h2 class="sec-title">Tools I've shipped with.</h2><p class="sec-lead">Only things used in real projects, grouped by where I use them.</p></div>
+    <div class="skill-groups" id="skillGroups"></div>
+  </div>
+</section>
+
+<section class="block" id="courses">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">Coursework</p><h2 class="sec-title">Courses that shaped me.</h2><p class="sec-lead">Every ball is a course I've taken at BRAC University. Grab one and throw it, or tap a ball to see the course and what I built in it.</p></div>
+    <div class="pit-bar reveal">
+      <div class="pit-legend" id="pitLegend"></div>
+      <button class="btn ghost sm" type="button" id="pitShake">Shake ↯</button>
+    </div>
+    <div class="pit reveal" id="pit" aria-label="Courses taken, shown as draggable balls"><p class="pit-hint mono" id="pitHint">drag · throw · tap</p></div>
+    <div class="pit-card" id="pitCard" aria-live="polite"><span class="mono">Tap a ball</span><b>Pick any course to see what it covered.</b><p></p></div>
+  </div>
+</section>
+
+<section class="block" id="journey">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">Journey</p><h2 class="sec-title">How I got here.</h2></div>
+    <div class="timeline" id="timeline"><span class="tl-fill" id="tlFill"></span></div>
+  </div>
+</section>
+
+<section class="block" id="certs">
+  <div class="wrap">
+    <div class="head reveal"><p class="eyebrow mono">Proof</p><h2 class="sec-title">Certifications and achievements.</h2></div>
+    <div class="cert-gallery" id="certGallery"></div>
+    <div class="cert-grid one">
+      <div class="panel reveal">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.2L7 21l5-2.6L17 21l-1.5-7.8"/></svg>Achievements and activities</h3>
+        <a class="row-link" href="https://codeforces.com/profile/SabikSwanan" target="_blank" rel="noopener"><span>Competitive programming, 63+ problems on Codeforces</span><span>PROFILE ↗</span></a>
+        <div class="row-link"><span>Volunteer, International Coastal Cleanup by Kewkradong Bangladesh, Ocean Conservancy and The Coca-Cola Company, Cox's Bazar</span><span>NOV 2023</span></div>
+        <div class="row-link"><span>Assistant Director, BRAC University Business Club (BIZ BEE)</span><span>APR 2023 – JAN 2024</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="contact">
+  <div class="wrap">
+    <div class="contact">
+      <div class="reveal">
+        <p class="eyebrow mono">Contact</p>
+        <h2 class="sec-title">Let's build something useful.</h2>
+        <p class="sec-lead">I'm open to roles, research collaborations and freelance projects in machine learning, data or software engineering. The fastest way to reach me is email.</p>
+        <p class="big-mail" id="mailText" style="margin-top:22px">sabikswanan@gmail.com</p>
+        <div class="mail-row"><button class="btn fill sm" type="button" id="copyMail">Copy email</button><span class="toast" id="copyToast" role="status"></span></div>
+        <div class="socials">
+          <a class="btn ghost sm" href="https://www.linkedin.com/in/sabikswanan" target="_blank" rel="noopener">LinkedIn ↗</a>
+          <a class="btn ghost sm" href="https://github.com/sabikswanan" target="_blank" rel="noopener">GitHub ↗</a>
+          <a class="btn ghost sm" href="https://codeforces.com/profile/SabikSwanan" target="_blank" rel="noopener">Codeforces ↗</a>
+        </div>
+      </div>
+      <form class="msg reveal" id="msgForm">
+        <label for="mName">Your name<input id="mName" type="text" required value=""></label>
+        <label for="mSub">Subject<input id="mSub" type="text" value="Opportunity for Sabik"></label>
+        <label for="mBody">Message<textarea id="mBody" rows="5">Hi Sabik, I came across your portfolio and would like to talk about…</textarea></label>
+        <a class="btn fill" id="mSend" href="#" target="_blank" rel="noopener">Open in Gmail ↗</a>
+        <small>This opens a Gmail draft addressed to me in a new tab. Nothing is sent until you press send there.</small>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap mono"><span>© 2026 Sabik Swanan · Dhaka 23.81°N 90.41°E</span><span>Hand-built with HTML, CSS and canvas</span><a href="#top" style="text-decoration:none">Back to top ↑</a></div>
+</footer>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ICONS = {"python":{"name":"Python","hex":"3776AB","path":"M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"},"c":{"name":"C","hex":"A8B9CC","path":"M16.5921 9.1962s-.354-3.298-3.627-3.39c-3.2741-.09-4.9552 2.474-4.9552 6.14 0 3.6651 1.858 6.5972 5.0451 6.5972 3.184 0 3.5381-3.665 3.5381-3.665l6.1041.365s.36 3.31-2.196 5.836c-2.552 2.5241-5.6901 2.9371-7.8762 2.9201-2.19-.017-5.2261.034-8.1602-2.97-2.938-3.0101-3.436-5.9302-3.436-8.8002 0-2.8701.556-6.6702 4.047-9.5502C7.444.72 9.849 0 12.254 0c10.0422 0 10.7172 9.2602 10.7172 9.2602z"},"javascript":{"name":"JavaScript","hex":"F7DF1E","path":"M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"},"mysql":{"name":"SQL","hex":"4479A1","path":"M16.405 5.501c-.115 0-.193.014-.274.033v.013h.014c.054.104.146.18.214.273.054.107.1.214.154.32l.014-.015c.094-.066.14-.172.14-.333-.04-.047-.046-.094-.08-.14-.04-.067-.126-.1-.18-.153zM5.77 18.695h-.927a50.854 50.854 0 00-.27-4.41h-.008l-1.41 4.41H2.45l-1.4-4.41h-.01a72.892 72.892 0 00-.195 4.41H0c.055-1.966.192-3.81.41-5.53h1.15l1.335 4.064h.008l1.347-4.064h1.095c.242 2.015.384 3.86.428 5.53zm4.017-4.08c-.378 2.045-.876 3.533-1.492 4.46-.482.716-1.01 1.073-1.583 1.073-.153 0-.34-.046-.566-.138v-.494c.11.017.24.026.386.026.268 0 .483-.075.647-.222.197-.18.295-.382.295-.605 0-.155-.077-.47-.23-.944L6.23 14.615h.91l.727 2.36c.164.536.233.91.205 1.123.4-1.064.678-2.227.835-3.483zm12.325 4.08h-2.63v-5.53h.885v4.85h1.745zm-3.32.135l-1.016-.5c.09-.076.177-.158.255-.25.433-.506.648-1.258.648-2.253 0-1.83-.718-2.746-2.155-2.746-.704 0-1.254.232-1.65.697-.43.508-.646 1.256-.646 2.245 0 .972.19 1.686.574 2.14.35.41.877.615 1.583.615.264 0 .506-.033.725-.098l1.325.772.36-.622zM15.5 17.588c-.225-.36-.337-.94-.337-1.736 0-1.393.424-2.09 1.27-2.09.443 0 .77.167.977.5.224.362.336.936.336 1.723 0 1.404-.424 2.108-1.27 2.108-.445 0-.77-.167-.978-.5zm-1.658-.425c0 .47-.172.856-.516 1.156-.344.3-.803.45-1.384.45-.543 0-1.064-.172-1.573-.515l.237-.476c.438.22.833.328 1.19.328.332 0 .593-.073.783-.22a.754.754 0 00.3-.615c0-.33-.23-.61-.648-.845-.388-.213-1.163-.657-1.163-.657-.422-.307-.632-.636-.632-1.177 0-.45.157-.81.47-1.085.315-.278.72-.415 1.22-.415.512 0 .98.136 1.4.41l-.213.476a2.726 2.726 0 00-1.064-.23c-.283 0-.502.068-.654.206a.685.685 0 00-.248.524c0 .328.234.61.666.85.393.215 1.187.67 1.187.67.433.305.648.63.648 1.168zm9.382-5.852c-.535-.014-.95.04-1.297.188-.1.04-.26.04-.274.167.055.053.063.14.11.214.08.134.218.313.346.407.14.11.28.216.427.31.26.16.555.255.81.416.145.094.293.213.44.313.073.05.12.14.214.172v-.02c-.046-.06-.06-.147-.105-.214-.067-.067-.134-.127-.2-.193a3.223 3.223 0 00-.695-.675c-.214-.146-.682-.35-.77-.595l-.013-.014c.146-.013.32-.066.46-.106.227-.06.435-.047.67-.106.106-.027.213-.06.32-.094v-.06c-.12-.12-.21-.283-.334-.395a8.867 8.867 0 00-1.104-.823c-.21-.134-.476-.22-.697-.334-.08-.04-.214-.06-.26-.127-.12-.146-.19-.34-.275-.514a17.69 17.69 0 01-.547-1.163c-.12-.262-.193-.523-.34-.763-.69-1.137-1.437-1.826-2.586-2.5-.247-.14-.543-.2-.856-.274-.167-.008-.334-.02-.5-.027-.11-.047-.216-.174-.31-.235-.38-.24-1.364-.76-1.644-.072-.18.434.267.862.422 1.082.115.153.26.328.34.5.047.116.06.235.107.356.106.294.207.622.347.897.073.14.153.287.247.413.054.073.146.107.167.227-.094.136-.1.334-.154.5-.24.757-.146 1.693.194 2.25.107.166.362.534.703.393.3-.12.234-.5.32-.835.02-.08.007-.133.048-.187v.015c.094.188.188.367.274.555.206.328.566.668.867.895.16.12.287.328.487.402v-.02h-.015c-.043-.058-.1-.086-.154-.133a3.445 3.445 0 01-.35-.4 8.76 8.76 0 01-.747-1.218c-.11-.21-.202-.436-.29-.643-.04-.08-.04-.2-.107-.24-.1.146-.247.273-.32.453-.127.288-.14.642-.188 1.01-.027.007-.014 0-.027.014-.214-.052-.287-.274-.367-.46-.2-.475-.233-1.238-.06-1.785.047-.14.247-.582.167-.716-.042-.127-.174-.2-.247-.303a2.478 2.478 0 01-.24-.427c-.16-.374-.24-.788-.414-1.162-.08-.173-.22-.354-.334-.513-.127-.18-.267-.307-.368-.52-.033-.073-.08-.194-.027-.274.014-.054.042-.075.094-.09.088-.072.335.022.422.062.247.1.455.194.662.334.094.066.195.193.315.226h.14c.214.047.455.014.655.073.355.114.675.28.962.46a5.953 5.953 0 012.085 2.286c.08.154.115.295.188.455.14.33.313.663.455.982.14.315.275.636.476.897.1.14.502.213.682.286.133.06.34.115.46.188.23.14.454.3.67.454.11.076.443.243.463.378z"},"scikitlearn":{"name":"scikit-learn","hex":"F7931E","path":"M15.601 5.53c-1.91.035-3.981.91-5.63 2.56-2.93 2.93-2.083 8.53-1.088 9.525.805.804 6.595 1.843 9.526-1.088a9.74 9.74 0 0 0 .584-.643c.043-.292.205-.66.489-1.106a1.848 1.848 0 0 1-.537.176c-.144.265-.37.55-.676.855-.354.335-.607.554-.76.656a.795.795 0 0 1-.437.152c-.35 0-.514-.308-.494-.924-.22.316-.425.549-.612.7a.914.914 0 0 1-.578.224c-.194 0-.36-.09-.496-.273a1.03 1.03 0 0 1-.193-.507 4.016 4.016 0 0 1-.726.583c-.224.132-.47.197-.74.197-.3 0-.543-.096-.727-.288a.978.978 0 0 1-.257-.524v.004c-.3.276-.564.48-.79.611a1.295 1.295 0 0 1-.649.197.693.693 0 0 1-.571-.275c-.145-.183-.218-.43-.218-.739 0-.464.101-1.02.302-1.67.201-.65.445-1.25.733-1.797l.842-.312a.21.21 0 0 1 .06-.013c.063 0 .116.047.157.14.04.095.061.221.061.38 0 .451-.104.888-.312 1.31-.207.422-.532.873-.974 1.352-.018.23-.027.388-.027.474 0 .193.036.345.106.458.071.113.165.169.282.169a.71.71 0 0 0 .382-.13c.132-.084.333-.26.602-.523.028-.418.187-.798.482-1.142.324-.38.685-.569 1.08-.569.206 0 .37.054.494.16a.524.524 0 0 1 .186.417c0 .458-.486.829-1.459 1.114.088.43.32.646.693.646a.807.807 0 0 0 .417-.117c.129-.076.321-.243.575-.497.032-.252.118-.495.259-.728.182-.3.416-.544.701-.73.285-.185.537-.278.756-.278.276 0 .47.127.58.381l.677-.374h.186l-.292.971c-.15.488-.226.823-.226 1.004 0 .19.067.285.202.285.086 0 .181-.045.285-.137.104-.092.25-.232.437-.42v.001c.143-.155.274-.32.392-.494-.19-.084-.285-.21-.285-.375 0-.17.058-.352.174-.545.116-.194.275-.29.479-.29.172 0 .258.088.258.265 0 .139-.05.338-.149.596.367-.04.687-.32.961-.842l.228-.01c1.059-2.438.828-5.075-.83-6.732-1.019-1.02-2.408-1.5-3.895-1.471zm4.725 8.203a8.938 8.938 0 0 1-1.333 2.151 1.09 1.09 0 0 0-.012.147c0 .168.047.309.14.423.092.113.206.17.34.17.296 0 .714-.264 1.254-.787-.001.04-.003.08-.003.121 0 .146.012.368.036.666l.733-.172c0-.2.003-.357.01-.474.01-.157.033-.33.066-.517.02-.11.07-.216.152-.315l.186-.216a5.276 5.276 0 0 1 .378-.397c.062-.055.116-.099.162-.13a.26.26 0 0 1 .123-.046c.055 0 .083.035.083.106 0 .07-.052.236-.156.497-.194.486-.292.848-.292 1.084 0 .175.046.314.136.418a.45.45 0 0 0 .358.155c.365 0 .803-.269 1.313-.808v-.381c-.361.426-.623.64-.784.64-.109 0-.163-.067-.163-.2 0-.1.065-.316.195-.65.19-.486.285-.836.285-1.048a.464.464 0 0 0-.112-.319.36.36 0 0 0-.282-.127c-.165 0-.354.077-.567.233-.213.156-.5.436-.863.84.053-.262.165-.622.335-1.08l-.809.156a6.54 6.54 0 0 0-.399 1.074c-.04.156-.07.316-.092.48a7.447 7.447 0 0 1-.49.45.38.38 0 0 1-.229.08.208.208 0 0 1-.174-.082.352.352 0 0 1-.064-.222c0-.1.019-.214.056-.343.038-.13.12-.373.249-.731l.308-.849zm-17.21-2.927c-.863-.016-1.67.263-2.261.854-1.352 1.352-1.07 3.827.631 5.527 1.7 1.701 4.95 1.21 5.527.632.467-.466 1.07-3.827-.631-5.527-.957-.957-2.158-1.465-3.267-1.486zm12.285.358h.166v.21H15.4zm.427 0h.166v.865l.46-.455h.195l-.364.362.428.684h-.198l-.357-.575-.164.166v.41h-.166zm1.016 0h.166v.21h-.166zm.481.122h.166v.288h.172v.135h-.172v.717c0 .037.006.062.02.075.012.013.037.02.074.02a.23.23 0 0 0 .078-.01v.141a.802.802 0 0 1-.136.014.23.23 0 0 1-.15-.043.15.15 0 0 1-.052-.123v-.79h-.141v-.136h.141zm-3.562.258c.081 0 .15.012.207.038.057.024.1.061.13.11s.045.106.045.173h-.176c-.006-.111-.075-.167-.208-.167a.285.285 0 0 0-.164.041.134.134 0 0 0-.06.117c0 .035.015.065.045.088.03.024.08.044.15.06l.16.039a.47.47 0 0 1 .224.105c.047.046.07.108.07.186a.3.3 0 0 1-.052.175.327.327 0 0 1-.152.116.585.585 0 0 1-.226.041c-.136 0-.24-.03-.309-.088-.069-.059-.105-.149-.109-.269h.176c.004.037.01.065.017.084a.166.166 0 0 0 .034.054c.044.043.112.065.204.065a.31.31 0 0 0 .177-.045.139.139 0 0 0 .067-.119.116.116 0 0 0-.038-.09.287.287 0 0 0-.124-.055l-.156-.038a1.248 1.248 0 0 1-.159-.05.359.359 0 0 1-.098-.061.22.22 0 0 1-.058-.083.32.32 0 0 1-.016-.108c0-.096.036-.174.109-.232a.45.45 0 0 1 .29-.087zm1.035 0a.46.46 0 0 1 .202.043.351.351 0 0 1 .187.212.577.577 0 0 1 .023.126h-.168a.256.256 0 0 0-.078-.168.242.242 0 0 0-.17-.06.248.248 0 0 0-.155.05.306.306 0 0 0-.1.144.662.662 0 0 0-.034.224.58.58 0 0 0 .035.214.299.299 0 0 0 .101.135.261.261 0 0 0 .157.048c.142 0 .227-.084.256-.252h.167a.519.519 0 0 1-.065.22.35.35 0 0 1-.146.138.464.464 0 0 1-.216.048.448.448 0 0 1-.246-.066.441.441 0 0 1-.161-.192.703.703 0 0 1-.057-.293c0-.085.01-.163.032-.233a.522.522 0 0 1 .095-.182.403.403 0 0 1 .15-.117.453.453 0 0 1 .191-.04zm.603.03h.166v1.046H15.4zm1.443 0h.166v1.046h-.166zm-5.05.618c-.08 0-.2.204-.356.611-.155.407-.308.977-.459 1.71.281-.312.509-.662.683-1.05.175-.387.262-.72.262-.999a.455.455 0 0 0-.036-.197c-.025-.05-.056-.075-.093-.075zm4.662 1.797c-.221 0-.431.188-.629.563-.197.376-.296.722-.296 1.038 0 .12.029.216.088.29a.273.273 0 0 0 .223.111c.221 0 .43-.188.625-.565.196-.377.294-.725.294-1.043a.457.457 0 0 0-.083-.29.269.269 0 0 0-.222-.104zm-2.848.007c-.146 0-.285.11-.417.333-.133.222-.2.51-.2.866.566-.159.849-.452.849-.881 0-.212-.077-.318-.232-.318Z"},"tensorflow":{"name":"TensorFlow","hex":"FF6F00","path":"M1.292 5.856L11.54 0v24l-4.095-2.378V7.603l-6.168 3.564.015-5.31zm21.43 5.311l-.014-5.31L12.46 0v24l4.095-2.378V14.87l3.092 1.788-.018-4.618-3.074-1.756V7.603l6.168 3.564z"},"pandas":{"name":"pandas","hex":"150458","path":"M16.922 0h2.623v18.104h-2.623zm-4.126 12.94h2.623v2.57h-2.623zm0-7.037h2.623v5.446h-2.623zm0 11.197h2.623v5.446h-2.623zM4.456 5.896h2.622V24H4.455zm4.213 2.559h2.623v2.57H8.67zm0 4.151h2.623v5.447H8.67zm0-11.187h2.623v5.446H8.67Z"},"numpy":{"name":"NumPy","hex":"013243","path":"M10.315 4.876L6.3048 2.8517l-4.401 2.1965 4.1186 2.0683zm1.8381.9277l4.2045 2.1223-4.3622 2.1906-4.125-2.0718zm5.6153-2.9213l4.3193 2.1658-3.863 1.9402-4.2131-2.1252zm-1.859-.9329L12.021 0 8.1742 1.9193l4.0068 2.0208zm-3.0401 16.7443V24l4.7107-2.3507-.0053-5.3085zm4.7037-4.2057l-.0052-5.2528-4.6985 2.3356v5.2546zm5.6553-.9845v5.327l-4.0178 2.0052-.0029-5.3028zm0-1.8626V6.4214l-4.0253 2.001.0034 5.2633zM11.2062 11.571L8.0333 9.9756v6.895s-3.8804-8.2564-4.2399-8.998c-.0463-.0957-.2371-.2007-.2858-.2262C2.8118 7.2812.773 6.2485.773 6.2485V18.43l2.8204 1.5076v-6.3674s3.8392 7.3775 3.878 7.458c.0389.0807.4245.8582.8362 1.1314.5485.363 2.8992 1.7766 2.8992 1.7766z"},"jupyter":{"name":"Jupyter","hex":"F37626","path":"M7.157 22.201A1.784 1.799 0 0 1 5.374 24a1.784 1.799 0 0 1-1.784-1.799 1.784 1.799 0 0 1 1.784-1.799 1.784 1.799 0 0 1 1.783 1.799zM20.582 1.427a1.415 1.427 0 0 1-1.415 1.428 1.415 1.427 0 0 1-1.416-1.428A1.415 1.427 0 0 1 19.167 0a1.415 1.427 0 0 1 1.415 1.427zM4.992 3.336A1.047 1.056 0 0 1 3.946 4.39a1.047 1.056 0 0 1-1.047-1.055A1.047 1.056 0 0 1 3.946 2.28a1.047 1.056 0 0 1 1.046 1.056zm7.336 1.517c3.769 0 7.06 1.38 8.768 3.424a9.363 9.363 0 0 0-3.393-4.547 9.238 9.238 0 0 0-5.377-1.728A9.238 9.238 0 0 0 6.95 3.73a9.363 9.363 0 0 0-3.394 4.547c1.713-2.04 5.004-3.424 8.772-3.424zm.001 13.295c-3.768 0-7.06-1.381-8.768-3.425a9.363 9.363 0 0 0 3.394 4.547A9.238 9.238 0 0 0 12.33 21a9.238 9.238 0 0 0 5.377-1.729 9.363 9.363 0 0 0 3.393-4.547c-1.712 2.044-5.003 3.425-8.772 3.425Z"},"googleearthengine":{"name":"Earth Engine","hex":"4285F4","path":"M7.853.717a1.19 1.19 0 00-.65.17L4.53 2.49c-.53.317-.732.984-.467 1.543l.93 1.958a9.217 9.217 0 00-1.745 3.076l-2.124.135A1.198 1.198 0 000 10.399v3.116a1.2 1.2 0 001.084 1.194l2.171.21a9.207 9.207 0 001.748 3.066l-.941 1.982a1.198 1.198 0 00.467 1.543l2.673 1.603a1.2 1.2 0 001.605-.347l1.22-1.771a9.22 9.22 0 001.971.216c.032 0 .064-.004.096-.004a9.245 9.245 0 001.876-.212l1.22 1.77a1.2 1.2 0 001.606.348l2.673-1.603c.53-.317.732-.984.467-1.543l-.941-1.982c.022-.025.048-.049.07-.076.066-.077.125-.159.188-.238a9.225 9.225 0 001.484-2.736l2.138-.137A1.198 1.198 0 0024 13.601v-3.116a1.2 1.2 0 00-1.084-1.194V9.29l-2.16-.21a9.182 9.182 0 00-1.501-2.786c-.063-.08-.124-.16-.19-.238-.018-.022-.039-.043-.058-.065l.93-1.958a1.198 1.198 0 00-.467-1.543L16.797.887a1.2 1.2 0 00-1.605.347L13.99 2.976a9.169 9.169 0 00-1.896-.219c-.033 0-.064-.004-.096-.004a9.2 9.2 0 00-1.992.223L8.808 1.234a1.2 1.2 0 00-.955-.517zm4.148 3.882c.574 0 1.13.072 1.668.197a7.41 7.41 0 015.384 4.993 7.36 7.36 0 01.332 2.193c0 .764-.116 1.5-.332 2.193a7.407 7.407 0 01-5.384 4.992 7.393 7.393 0 01-1.668.199c-4.071 0-7.384-3.313-7.384-7.384 0-4.07 3.313-7.383 7.384-7.383zM11.907 6C9.558 6 8.429 7.207 8.429 7.207c3.501-1.577 5.23 2.986 6.702 4.386 1.472 1.4 2.887.203 2.887.203-.012-.787-.252-1.533-.252-1.533-.968.168-1.398-.494-1.97-1.252C15.224 8.253 13.561 6 11.907 6zm-3.84 3.228c-.705.015-1.3.35-1.653 1-.868 1.601-.096 3.64-.096 3.64s.3-1.532 1.537-1.309c1.238.224 1.754 1.208 2.504 1.985.75.776 1.895 2.064 3.978 2.064 2.082 0 3.018-1.516 3.435-2.937v-.002l-.053.04c-1.265.98-3.335.882-4.548-.275-.89-.846-1.403-1.908-2.135-2.68-.981-1.038-2.065-1.545-2.97-1.526z"},"googlecolab":{"name":"Colab","hex":"F9AB00","path":"M16.9414 4.9757a7.033 7.033 0 0 0-4.9308 2.0646 7.033 7.033 0 0 0-.1232 9.8068l2.395-2.395a3.6455 3.6455 0 0 1 5.1497-5.1478l2.397-2.3989a7.033 7.033 0 0 0-4.8877-1.9297zM7.07 4.9855a7.033 7.033 0 0 0-4.8878 1.9316l2.3911 2.3911a3.6434 3.6434 0 0 1 5.0227.1271l1.7341-2.9737-.0997-.0802A7.033 7.033 0 0 0 7.07 4.9855zm15.0093 2.1721l-2.3892 2.3911a3.6455 3.6455 0 0 1-5.1497 5.1497l-2.4067 2.4068a7.0362 7.0362 0 0 0 9.9456-9.9476zM1.932 7.1674a7.033 7.033 0 0 0-.002 9.6816l2.397-2.397a3.6434 3.6434 0 0 1-.004-4.8916zm7.664 7.4235c-1.38 1.3816-3.5863 1.411-5.0168.1134l-2.397 2.395c2.4693 2.3328 6.263 2.5753 9.0072.5455l.1368-.1115z"},"react":{"name":"React","hex":"61DAFB","path":"M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z"},"nodedotjs":{"name":"Node.js","hex":"5FA04E","path":"M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.08-0.383 c0.585-0.203,0.703-0.25,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.99,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.253,0.256-0.253h1.115c0.139,0,0.255,0.112,0.255,0.253v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.57,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.273-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.253 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z"},"express":{"name":"Express","hex":"0A0A0A","path":"M12.262 16.666h1.146l6.975-9.325H19.22zm9.778 1.441v.004l-4.334-5.706-.557.74 4.873 6.682H.945V4.173h9.505l5.026 6.7.574-.772-4.374-5.928h.003l-.719-.945H0v17.544h24zM10.917 8.705a3.8 3.8 0 0 0-1.292-1.183q-.796-.45-1.916-.45c-.746 0-1.37.14-1.906.424a3.76 3.76 0 0 0-1.31 1.12 4.9 4.9 0 0 0-.75 1.581 7.17 7.17 0 0 0 0 3.696c.148.567.402 1.101.75 1.573a3.5 3.5 0 0 0 1.31 1.066q.803.39 1.906.389 1.77 0 2.739-.868.966-.867 1.328-2.457h-1.139q-.271 1.084-.977 1.734-.704.651-1.952.65-.812 0-1.392-.342a3.1 3.1 0 0 1-.957-.869 3.5 3.5 0 0 1-.551-1.182 5 5 0 0 1-.17-1.133 9 9 0 0 0-.015-.286 4.5 4.5 0 0 1 .015-.829c.047-.418.147-.83.296-1.223A3.7 3.7 0 0 1 5.54 9.05a2.9 2.9 0 0 1 .922-.742q.541-.28 1.246-.28c.47 0 .869.093 1.23.28q.541.281.922.742.379.461.587 1.057t.225 1.246H5.625l.004.957h6.182a7.3 7.3 0 0 0-.18-1.924 4.9 4.9 0 0 0-.715-1.68z"},"tailwindcss":{"name":"Tailwind","hex":"06B6D4","path":"M12.001,4.8c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 C13.666,10.618,15.027,12,18.001,12c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C16.337,6.182,14.976,4.8,12.001,4.8z M6.001,12c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 c1.177,1.194,2.538,2.576,5.512,2.576c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C10.337,13.382,8.976,12,6.001,12z"},"vite":{"name":"Vite","hex":"9135FF","path":"M13.056 23.238a.57.57 0 0 1-1.02-.355v-5.202c0-.63-.512-1.143-1.144-1.143H5.148a.57.57 0 0 1-.464-.903l3.777-5.29c.54-.753 0-1.804-.93-1.804H.57a.574.574 0 0 1-.543-.746.6.6 0 0 1 .08-.157L5.008.78a.57.57 0 0 1 .467-.24h14.589a.57.57 0 0 1 .466.903l-3.778 5.29c-.54.755 0 1.806.93 1.806h5.745c.238 0 .424.138.513.322a.56.56 0 0 1-.063.603z"},"mongodb":{"name":"MongoDB","hex":"47A248","path":"M17.193 9.555c-1.264-5.58-4.252-7.414-4.573-8.115-.28-.394-.53-.954-.735-1.44-.036.495-.055.685-.523 1.184-.723.566-4.438 3.682-4.74 10.02-.282 5.912 4.27 9.435 4.888 9.884l.07.05A73.49 73.49 0 0111.91 24h.481c.114-1.032.284-2.056.51-3.07.417-.296.604-.463.85-.693a11.342 11.342 0 003.639-8.464c.01-.814-.103-1.662-.197-2.218zm-5.336 8.195s0-8.291.275-8.29c.213 0 .49 10.695.49 10.695-.381-.045-.765-1.76-.765-2.405z"},"postgresql":{"name":"PostgreSQL","hex":"4169E1","path":"M23.5594 14.7228a.5269.5269 0 0 0-.0563-.1191c-.139-.2632-.4768-.3418-1.0074-.2321-1.6533.3411-2.2935.1312-2.5256-.0191 1.342-2.0482 2.445-4.522 3.0411-6.8297.2714-1.0507.7982-3.5237.1222-4.7316a1.5641 1.5641 0 0 0-.1509-.235C21.6931.9086 19.8007.0248 17.5099.0005c-1.4947-.0158-2.7705.3461-3.1161.4794a9.449 9.449 0 0 0-.5159-.0816 8.044 8.044 0 0 0-1.3114-.1278c-1.1822-.0184-2.2038.2642-3.0498.8406-.8573-.3211-4.7888-1.645-7.2219.0788C.9359 2.1526.3086 3.8733.4302 6.3043c.0409.818.5069 3.334 1.2423 5.7436.4598 1.5065.9387 2.7019 1.4334 3.582.553.9942 1.1259 1.5933 1.7143 1.7895.4474.1491 1.1327.1441 1.8581-.7279.8012-.9635 1.5903-1.8258 1.9446-2.2069.4351.2355.9064.3625 1.39.3772a.0569.0569 0 0 0 .0004.0041 11.0312 11.0312 0 0 0-.2472.3054c-.3389.4302-.4094.5197-1.5002.7443-.3102.064-1.1344.2339-1.1464.8115-.0025.1224.0329.2309.0919.3268.2269.4231.9216.6097 1.015.6331 1.3345.3335 2.5044.092 3.3714-.6787-.017 2.231.0775 4.4174.3454 5.0874.2212.5529.7618 1.9045 2.4692 1.9043.2505 0 .5263-.0291.8296-.0941 1.7819-.3821 2.5557-1.1696 2.855-2.9059.1503-.8707.4016-2.8753.5388-4.1012.0169-.0703.0357-.1207.057-.1362.0007-.0005.0697-.0471.4272.0307a.3673.3673 0 0 0 .0443.0068l.2539.0223.0149.001c.8468.0384 1.9114-.1426 2.5312-.4308.6438-.2988 1.8057-1.0323 1.5951-1.6698zM2.371 11.8765c-.7435-2.4358-1.1779-4.8851-1.2123-5.5719-.1086-2.1714.4171-3.6829 1.5623-4.4927 1.8367-1.2986 4.8398-.5408 6.108-.13-.0032.0032-.0066.0061-.0098.0094-2.0238 2.044-1.9758 5.536-1.9708 5.7495-.0002.0823.0066.1989.0162.3593.0348.5873.0996 1.6804-.0735 2.9184-.1609 1.1504.1937 2.2764.9728 3.0892.0806.0841.1648.1631.2518.2374-.3468.3714-1.1004 1.1926-1.9025 2.1576-.5677.6825-.9597.5517-1.0886.5087-.3919-.1307-.813-.5871-1.2381-1.3223-.4796-.839-.9635-2.0317-1.4155-3.5126zm6.0072 5.0871c-.1711-.0428-.3271-.1132-.4322-.1772.0889-.0394.2374-.0902.4833-.1409 1.2833-.2641 1.4815-.4506 1.9143-1.0002.0992-.126.2116-.2687.3673-.4426a.3549.3549 0 0 0 .0737-.1298c.1708-.1513.2724-.1099.4369-.0417.156.0646.3078.26.3695.4752.0291.1016.0619.2945-.0452.4444-.9043 1.2658-2.2216 1.2494-3.1676 1.0128zm2.094-3.988-.0525.141c-.133.3566-.2567.6881-.3334 1.003-.6674-.0021-1.3168-.2872-1.8105-.8024-.6279-.6551-.9131-1.5664-.7825-2.5004.1828-1.3079.1153-2.4468.079-3.0586-.005-.0857-.0095-.1607-.0122-.2199.2957-.2621 1.6659-.9962 2.6429-.7724.4459.1022.7176.4057.8305.928.5846 2.7038.0774 3.8307-.3302 4.7363-.084.1866-.1633.3629-.2311.5454zm7.3637 4.5725c-.0169.1768-.0358.376-.0618.5959l-.146.4383a.3547.3547 0 0 0-.0182.1077c-.0059.4747-.054.6489-.115.8693-.0634.2292-.1353.4891-.1794 1.0575-.11 1.4143-.8782 2.2267-2.4172 2.5565-1.5155.3251-1.7843-.4968-2.0212-1.2217a6.5824 6.5824 0 0 0-.0769-.2266c-.2154-.5858-.1911-1.4119-.1574-2.5551.0165-.5612-.0249-1.9013-.3302-2.6462.0044-.2932.0106-.5909.019-.8918a.3529.3529 0 0 0-.0153-.1126 1.4927 1.4927 0 0 0-.0439-.208c-.1226-.4283-.4213-.7866-.7797-.9351-.1424-.059-.4038-.1672-.7178-.0869.067-.276.1831-.5875.309-.9249l.0529-.142c.0595-.16.134-.3257.213-.5012.4265-.9476 1.0106-2.2453.3766-5.1772-.2374-1.0981-1.0304-1.6343-2.2324-1.5098-.7207.0746-1.3799.3654-1.7088.5321a5.6716 5.6716 0 0 0-.1958.1041c.0918-1.1064.4386-3.1741 1.7357-4.4823a4.0306 4.0306 0 0 1 .3033-.276.3532.3532 0 0 0 .1447-.0644c.7524-.5706 1.6945-.8506 2.802-.8325.4091.0067.8017.0339 1.1742.081 1.939.3544 3.2439 1.4468 4.0359 2.3827.8143.9623 1.2552 1.9315 1.4312 2.4543-1.3232-.1346-2.2234.1268-2.6797.779-.9926 1.4189.543 4.1729 1.2811 5.4964.1353.2426.2522.4522.2889.5413.2403.5825.5515.9713.7787 1.2552.0696.087.1372.1714.1885.245-.4008.1155-1.1208.3825-1.0552 1.717-.0123.1563-.0423.4469-.0834.8148-.0461.2077-.0702.4603-.0994.7662zm.8905-1.6211c-.0405-.8316.2691-.9185.5967-1.0105a2.8566 2.8566 0 0 0 .135-.0406 1.202 1.202 0 0 0 .1342.103c.5703.3765 1.5823.4213 3.0068.1344-.2016.1769-.5189.3994-.9533.6011-.4098.1903-1.0957.333-1.7473.3636-.7197.0336-1.0859-.0807-1.1721-.151zm.5695-9.2712c-.0059.3508-.0542.6692-.1054 1.0017-.055.3576-.112.7274-.1264 1.1762-.0142.4368.0404.8909.0932 1.3301.1066.887.216 1.8003-.2075 2.7014a3.5272 3.5272 0 0 1-.1876-.3856c-.0527-.1276-.1669-.3326-.3251-.6162-.6156-1.1041-2.0574-3.6896-1.3193-4.7446.3795-.5427 1.3408-.5661 2.1781-.463zm.2284 7.0137a12.3762 12.3762 0 0 0-.0853-.1074l-.0355-.0444c.7262-1.1995.5842-2.3862.4578-3.4385-.0519-.4318-.1009-.8396-.0885-1.2226.0129-.4061.0666-.7543.1185-1.0911.0639-.415.1288-.8443.1109-1.3505.0134-.0531.0188-.1158.0118-.1902-.0457-.4855-.5999-1.938-1.7294-3.253-.6076-.7073-1.4896-1.4972-2.6889-2.0395.5251-.1066 1.2328-.2035 2.0244-.1859 2.0515.0456 3.6746.8135 4.8242 2.2824a.908.908 0 0 1 .0667.1002c.7231 1.3556-.2762 6.2751-2.9867 10.5405zm-8.8166-6.1162c-.025.1794-.3089.4225-.6211.4225a.5821.5821 0 0 1-.0809-.0056c-.1873-.026-.3765-.144-.5059-.3156-.0458-.0605-.1203-.178-.1055-.2844.0055-.0401.0261-.0985.0925-.1488.1182-.0894.3518-.1226.6096-.0867.3163.0441.6426.1938.6113.4186zm7.9305-.4114c.0111.0792-.049.201-.1531.3102-.0683.0717-.212.1961-.4079.2232a.5456.5456 0 0 1-.075.0052c-.2935 0-.5414-.2344-.5607-.3717-.024-.1765.2641-.3106.5611-.352.297-.0414.6111.0088.6356.1851z"},"opengl":{"name":"OpenGL","hex":"5586A4","path":"M3.607 13.88c1.32 1.197 3.862 2.008 6.781 2.008 2.375 0 4.503-.481 5.923-1.325-1.555 1.413-4.328 2.41-7.495 2.41C3.947 16.972 0 14.745 0 11.999c0-2.747 3.948-4.973 8.818-4.972 3.179.001 5.96 1.001 7.511 2.425-1.421-.85-3.558-1.34-5.941-1.34-2.828 0-5.303.761-6.655 1.897.01-.004.019-.008.028-.013.253-.119.548-.179.885-.179.336 0 .631.06.885.179.253.12.465.28.635.48.171.201.298.431.383.691.086.26.128.531.128.812 0 .282-.042.553-.128.813-.085.26-.212.49-.383.691-.17.2-.382.359-.635.477-.254.117-.549.176-.885.176-.337 0-.632-.059-.885-.176a2.2 2.2 0 0 1-.154-.08m-.347-1.283c.056.203.143.385.262.547s.271.292.458.391q.279.147.666.147t.666-.147c.186-.099.339-.229.458-.391s.206-.344.261-.547a2.3 2.3 0 0 0 0-1.232c-.055-.203-.142-.385-.261-.547s-.272-.293-.458-.391-.408-.148-.666-.148-.48.05-.666.148c-.187.099-.339.229-.458.391s-.206.344-.262.547c-.055.202-.083.407-.083.616 0 .208.028.414.083.616m4.254-1.183v.356h.009c.073-.146.187-.252.344-.318.156-.066.328-.099.515-.099.208 0 .39.037.544.112.155.074.283.175.385.302.103.128.18.274.232.441.052.166.078.342.078.529s-.025.363-.075.529c-.051.167-.127.312-.229.435-.103.124-.231.222-.386.293-.154.071-.334.107-.539.107-.066 0-.139-.007-.221-.02a1.25 1.25 0 0 1-.242-.067.94.94 0 0 1-.227-.125.67.67 0 0 1-.179-.196h-.009v1.359h-.446v-3.638zm1.585.936c-.033-.117-.083-.222-.151-.313-.067-.092-.154-.165-.26-.219-.105-.054-.229-.081-.371-.081-.149 0-.275.028-.379.086a.76.76 0 0 0-.255.226c-.066.094-.113.2-.143.318-.029.119-.044.24-.044.362 0 .129.016.253.047.373.031.121.08.227.148.319.067.091.155.165.262.221q.162.084.39.084c.152 0 .28-.029.382-.087a.694.694 0 0 0 .246-.229c.063-.095.108-.203.135-.325.028-.122.042-.248.042-.377 0-.122-.016-.241-.049-.358m2.799 1.527c-.201.149-.455.224-.761.224q-.324 0-.561-.102c-.159-.068-.292-.163-.4-.285-.107-.122-.188-.268-.242-.438-.054-.169-.084-.354-.091-.554 0-.2.031-.384.094-.55.062-.166.15-.311.263-.433s.248-.217.402-.285c.155-.067.325-.101.51-.101.24 0 .439.048.598.145.158.097.285.22.381.37q.144.2235.198.489c.037.177.052.345.045.505h-2.018c-.004.115.01.224.041.328.032.103.082.195.151.274.07.08.158.143.266.191.108.047.234.071.38.071.187 0 .341-.043.461-.128q.1785-.1275.237-.387h.438c-.059.295-.19.517-.392.666m-.108-1.688c-.04-.092-.093-.171-.161-.237a.77.77 0 0 0-.239-.157c-.092-.039-.194-.059-.304-.059-.115 0-.218.02-.31.059a.71.71 0 0 0-.237.16.8.8 0 0 0-.156.236c-.038.09-.06.186-.067.287h1.545a.86.86 0 0 0-.071-.289m1.259-.775v.418h.009c.185-.32.478-.479.88-.479.178 0 .326.023.445.071s.215.114.288.199c.074.085.125.186.155.303.029.117.044.247.044.39v1.733h-.446v-1.783q0-.2445-.147-.387c-.097-.095-.231-.143-.402-.143-.136 0-.253.021-.353.062-.099.04-.182.098-.248.173a.75.75 0 0 0-.149.262c-.033.1-.049.21-.049.328v1.487h-.447v-2.634zm4.908 2.606c-.202.083-.406.125-.611.125-.324 0-.616-.056-.875-.166s-.477-.262-.655-.456c-.178-.193-.314-.42-.409-.682-.095-.261-.142-.542-.142-.844 0-.31.047-.597.142-.862.094-.265.23-.496.408-.694.177-.197.395-.352.654-.464.259-.113.55-.169.875-.169.217 0 .427.032.631.096.203.064.387.158.551.282.164.125.3.277.406.459.107.182.172.391.196.626h-.889c-.055-.231-.162-.405-.32-.521-.159-.116-.35-.174-.575-.174-.21 0-.388.04-.534.119s-.265.186-.356.319q-.1365.201-.198.456-.063.255-.063.528c0 .174.021.344.063.508.041.165.108.313.199.444.091.132.209.237.356.316.146.08.324.119.534.119.309 0 .547-.076.715-.228.169-.152.267-.372.294-.661h-.936v-.681h1.776v2.237h-.591l-.095-.47c-.166.209-.35.355-.551.438m2.746-4.107v3.368h2.063v.768h-2.992V9.913zM24 13.667c0 .07-.017.134-.052.194a.389.389 0 0 1-.336.194.389.389 0 0 1-.336-.194.39.39 0 0 1-.052-.194.389.389 0 0 1 .194-.336.39.39 0 0 1 .194-.052.389.389 0 0 1 .336.194c.035.06.052.125.052.194m-.075 0c0-.086-.031-.16-.092-.221a.302.302 0 0 0-.221-.092c-.086 0-.16.031-.221.092a.302.302 0 0 0-.092.221c0 .086.031.16.092.221s.135.092.221.092.16-.031.221-.092a.302.302 0 0 0 .092-.221m-.489-.207h.186c.052 0 .09.01.114.032.023.021.035.049.035.085q0 .0405-.027.072c-.018.02-.046.035-.085.044.016.006.028.013.035.019q.0165.015.033.042c.001.002.023.042.067.12h-.122c-.039-.079-.066-.126-.079-.141-.014-.016-.028-.023-.041-.023-.003 0-.007 0-.013.001v.163h-.103zm.103.176h.045q.045 0 .063-.015a.046.046 0 0 0 .018-.037.05.05 0 0 0-.017-.038c-.012-.009-.032-.014-.06-.014h-.049z"},"cisco":{"name":"Packet Tracer","hex":"1BA0D7","path":"M16.331 18.171V17.06l-.022.01c-.25.121-.522.19-.801.203a1.186 1.186 0 01-.806-.237 1.038 1.038 0 01-.352-.498 1.21 1.21 0 01-.023-.667c.052-.225.178-.426.357-.569.16-.134.355-.218.562-.242a1.85 1.85 0 011.061.198l.024.013v-1.117l-.051-.014a2.862 2.862 0 00-1.011-.132 2.34 2.34 0 00-.903.206c-.287.132-.54.327-.739.571a2.221 2.221 0 00-.04 2.705c.295.378.709.645 1.175.756.491.12 1.006.102 1.487-.052l.082-.023M5.336 18.171V17.06l-.022.01c-.25.121-.522.19-.801.203a1.183 1.183 0 01-.806-.237 1.03 1.03 0 01-.351-.498 1.202 1.202 0 01-.024-.667c.052-.225.177-.426.357-.569.16-.134.355-.218.562-.242a1.85 1.85 0 011.061.198l.024.013v-1.117l-.051-.014a2.862 2.862 0 00-1.011-.132 2.344 2.344 0 00-.903.206 2.08 2.08 0 00-.74.571 2.224 2.224 0 00-.041 2.705 2.11 2.11 0 001.176.756c.491.12 1.005.102 1.487-.052l.083-.023M9.26 17.249l-.004.957.07.012c.22.041.441.069.664.085.195.019.391.022.587.012.187-.014.372-.049.551-.104.21-.06.405-.163.571-.305a1.16 1.16 0 00.333-.478 1.31 1.31 0 00-.007-.96 1.068 1.068 0 00-.298-.414 1.261 1.261 0 00-.438-.255l-.722-.268a.388.388 0 01-.197-.188.245.245 0 01.008-.219.382.382 0 01.154-.142.798.798 0 01.257-.074c.153-.022.308-.021.46.005.18.02.358.051.533.096l.038.008v-.883l-.069-.015a4.749 4.749 0 00-.543-.097 2.844 2.844 0 00-.714-.003c-.3.027-.585.143-.821.33-.16.126-.281.293-.351.484-.104.29-.105.608 0 .899.054.145.14.274.252.381.097.093.207.173.327.236.157.084.324.149.497.195.057.017.114.035.17.054l.085.031.024.01c.084.03.162.078.226.14.045.042.08.094.101.151a.325.325 0 01.001.161.339.339 0 01-.166.198.856.856 0 01-.275.086 2.032 2.032 0 01-.427.021 5.208 5.208 0 01-.557-.074 9.195 9.195 0 01-.287-.067l-.033-.006zm-2.475.995h1.05v-4.167h-1.05v4.167zm12.162-2.936a1.095 1.095 0 011.541.158 1.094 1.094 0 01-.157 1.541l-.017.014a1.096 1.096 0 01-1.367-1.713m-1.525.854a2.193 2.193 0 002.666 2.107 2.139 2.139 0 00.701-3.937 2.207 2.207 0 00-3.367 1.83M22.961 10.728a.52.52 0 001.039 0V9.573a.52.52 0 00-1.039 0v1.155M20.117 10.728a.522.522 0 001.041 0V8.139a.521.521 0 00-1.04 0v2.589M17.231 11.771a.521.521 0 001.039 0V6.17a.52.52 0 00-1.039 0v5.601M14.393 10.728a.521.521 0 001.04 0V8.139a.52.52 0 00-1.039 0v2.589M11.494 10.728a.522.522 0 001.039 0V9.573a.52.52 0 00-1.039 0v1.155M8.624 10.728a.52.52 0 001.039 0V8.139a.52.52 0 00-1.039 0v2.589M5.737 11.771a.52.52 0 001.039 0V6.17a.52.52 0 00-1.039 0v5.601M2.876 10.728a.522.522 0 001.04 0V8.139a.52.52 0 00-1.039 0v2.589M0 10.728a.521.521 0 001.039 0V9.573a.52.52 0 00-1.039 0v1.155"},"googlegemini":{"name":"Gemini API","hex":"8E75B2","path":"M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"},"git":{"name":"Git","hex":"F03C2E","path":"M13.09 23.549a1.54 1.54 0 0 1-2.18 0L.451 13.089a1.54 1.54 0 0 1 0-2.179l7.191-7.19 2.733 2.733a1.85 1.85 0 0 0 .964 2.326v6.66a1.849 1.849 0 1 0 1.54 0V8.957l2.508 2.508a1.85 1.85 0 1 0 1.09-1.09l-2.634-2.634a1.85 1.85 0 0 0-2.378-2.377L8.73 2.63 10.91.451a1.54 1.54 0 0 1 2.179 0l10.459 10.46a1.54 1.54 0 0 1 0 2.179z"},"github":{"name":"GitHub","hex":"181717","path":"M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"},"vercel":{"name":"Vercel","hex":"000000","path":"m12 1.608 12 20.784H0Z"},"figma":{"name":"Figma","hex":"F24E1E","path":"M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.014-4.49-4.49S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441c0 2.503-2.047 4.539-4.563 4.539zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148zm7.704 0h-.098c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h.098c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.49-4.49 4.49zm-.097-7.509c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h.098c1.665 0 3.019-1.355 3.019-3.019s-1.355-3.019-3.019-3.019h-.098z"},"datacamp":{"name":"DataCamp","hex":"03EF62","path":"M12.946 18.151v-5.239L21.209 8.2 19.2 7.048l-6.254 3.567V5.36c0-.356-.192-.689-.5-.866L4.922.177a1.434 1.434 0 0 0-1.455.044 1.438 1.438 0 0 0-.676 1.224v14.777A1.44 1.44 0 0 0 4.92 17.49l6.032-3.44v4.683a1 1 0 0 0 .504.867l7.73 4.4 2.01-1.152-8.25-4.697zM10.953 5.938v5.814L4.785 15.27V2.4l6.168 3.539v-.001z"},"codeforces":{"name":"Codeforces","hex":"1F8ACB","path":"M4.5 7.5C5.328 7.5 6 8.172 6 9v10.5c0 .828-.672 1.5-1.5 1.5h-3C.673 21 0 20.328 0 19.5V9c0-.828.673-1.5 1.5-1.5h3zm9-4.5c.828 0 1.5.672 1.5 1.5v15c0 .828-.672 1.5-1.5 1.5h-3c-.827 0-1.5-.672-1.5-1.5v-15c0-.828.673-1.5 1.5-1.5h3zm9 7.5c.828 0 1.5.672 1.5 1.5v7.5c0 .828-.672 1.5-1.5 1.5h-3c-.828 0-1.5-.672-1.5-1.5V12c0-.828.672-1.5 1.5-1.5h3z"},"kaggle":{"name":"Kaggle","hex":"20BEFF","path":"M.1025 7.3475c-.0681 0-.1022.0341-.1022.102v6.752c0 .0681.034.1022.1022.1022h.7049c.068 0 .1022-.034.1022-.1023v-1.481l.4187-.3985 1.5016 1.91c.041.0477.0884.0716.143.0716h.9091c.0476 0 .0748-.0135.0817-.0407.0135-.041.0066-.075-.0206-.1023l-1.9816-2.4618 1.9002-1.8384c.0204-.0205.0237-.051.01-.092-.0137-.0339-.0408-.051-.0816-.051h-.9398c-.0477 0-.0953.024-.143.0716L.9096 11.607V7.4496c0-.0679-.0342-.102-.1022-.102zm18.0417 0c-.068 0-.102.0341-.102.102v6.752c0 .0681.034.102.102.102h.705c.068 0 .102-.034.102-.102v-6.752c0-.068-.034-.102-.102-.102zM5.961 9.6254c-.5653 0-1.11.1806-1.6343.5415-.0545.0545-.0648.102-.0307.143l.3676.5208c.0272.0477.0717.0545.133.0204.3948-.2722.783-.4086 1.1644-.4086.2927 0 .5158.0886.669.2656.1532.1771.2197.3917.1992.6436-.6606.0681-1.1545.1495-1.4813.245-.8308.2383-1.2461.6913-1.2461 1.3586 0 .4222.1533.7695.4598 1.0419.3132.2654.6845.3982 1.1134.3982.4698 0 .8545-.1125 1.1542-.3372v.1432c0 .0682.0374.102.1123.102h.7048c.068 0 .102-.0338.102-.102V11.372c0-.6604-.2245-1.1406-.6739-1.4403-.3065-.2043-.6776-.3063-1.1134-.3063zm4.3225 0c-.6742 0-1.195.2622-1.5627.7865-.3133.4359-.4699.9671-.4699 1.5936 0 .6604.1634 1.2087.4903 1.6444.3744.4972.892.7455 1.5526.7455.5313 0 .9567-.1327 1.2768-.3982v.531c0 .858-.4122 1.287-1.236 1.287-.361 0-.732-.1907-1.1132-.572a.098.098 0 00-.0716-.0306c-.034 0-.0613.0102-.0817.0307l-.4802.48c-.0408.0613-.0375.1124.0103.1532.1361.1157.2554.2129.3576.2911.102.0783.1905.1413.2656.189.354.1975.7284.2961 1.1235.2961.6808 0 1.207-.1925 1.5781-.577.3711-.3848.5567-.9484.5567-1.6903V9.8196c0-.068-.034-.102-.102-.102h-.705c-.0682 0-.1021.034-.1021.102v.2043c-.3471-.2657-.7763-.3985-1.287-.3985zm4.8021 0c-.6742 0-1.195.2622-1.5627.7865-.3132.4359-.4699.9671-.4699 1.5936 0 .6604.1633 1.2087.4903 1.6444.3744.4972.892.7455 1.5526.7455.5311 0 .9566-.1327 1.2768-.3982v.531c0 .858-.4122 1.287-1.236 1.287-.361 0-.732-.1907-1.1133-.572a.098.098 0 00-.0716-.0306c-.034 0-.0612.0102-.0816.0307l-.48.48c-.0409.0613-.0376.1124.01.1532.1363.1157.2555.2129.3576.2911.1021.0783.1906.1413.2657.189.354.1975.7285.2961 1.1237.2961.6808 0 1.2068-.1925 1.5781-.577.371-.3848.5565-.9484.5565-1.6903V9.8196c0-.068-.034-.102-.102-.102h-.7049c-.0682 0-.1022.034-.1022.102v.2043c-.3474-.2657-.7763-.3985-1.287-.3985zm6.7457 0c-.6537 0-1.185.211-1.5936.6332-.4427.4632-.664 1.0283-.664 1.6956 0 .7083.225 1.2905.6743 1.7467.463.463 1.042.6945 1.7366.6945.6467 0 1.2154-.1838 1.7057-.5515.0545-.041.0545-.0884 0-.143l-.4802-.4903c-.041-.0409-.0919-.0409-.1533 0-.2998.2112-.6368.3167-1.0112.3167-.4222 0-.7729-.119-1.052-.3576-.2452-.2248-.3882-.5038-.429-.8375h3.3197c.0679 0 .1022-.0341.1022-.1023l.01-.2244c.0341-.6878-.1668-1.26-.6025-1.7162-.4224-.4426-.9432-.664-1.5627-.664zm-.0206.7865c.3268 0 .6062.1056.8377.3166.2452.211.371.4734.378.7865h-2.4618c.0613-.3269.2077-.5925.4392-.7968.2313-.2042.5004-.3063.8069-.3063zm-11.4249.102c.6196 0 1.0146.2181 1.1848.6538v1.6854c-.1702.4358-.5755.6538-1.2155.6538-.3133 0-.5687-.0986-.7661-.2963-.2656-.2518-.3983-.6538-.3983-1.2053 0-.9941.3984-1.4914 1.1951-1.4914zm4.802 0c.6196 0 1.0148.2181 1.1851.6538h-.0002v1.6854c-.1703.4358-.5755.6538-1.2155.6538-.3132 0-.5686-.0986-.7661-.2963-.2655-.2518-.3983-.6538-.3983-1.2053 0-.9941.3983-1.4914 1.195-1.4914zm-8.3586 1.6547v1.0215c-.286.286-.6675.412-1.1441.3779-.1703-.0135-.32-.0663-.4493-.1582-.1294-.0919-.2045-.2129-.2249-.3627-.0341-.2657.1158-.47.4495-.6129.2452-.1088.7013-.1974 1.3688-.2656z"},"html5":{"name":"HTML5","hex":"E34F26","path":"M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"},"css":{"name":"CSS","hex":"663399","path":"M0 0v20.16A3.84 3.84 0 0 0 3.84 24h16.32A3.84 3.84 0 0 0 24 20.16V3.84A3.84 3.84 0 0 0 20.16 0Zm14.256 13.08c1.56 0 2.28 1.08 2.304 2.64h-1.608c.024-.288-.048-.6-.144-.84-.096-.192-.288-.264-.552-.264-.456 0-.696.264-.696.84-.024.576.288.888.768 1.08.72.288 1.608.744 1.92 1.296q.432.648.432 1.656c0 1.608-.912 2.592-2.496 2.592-1.656 0-2.4-1.032-2.424-2.688h1.68c0 .792.264 1.176.792 1.176.264 0 .456-.072.552-.24.192-.312.24-1.176-.048-1.512-.312-.408-.912-.6-1.32-.816q-.828-.396-1.224-.936c-.24-.36-.36-.888-.36-1.536 0-1.44.936-2.472 2.424-2.448m5.4 0c1.584 0 2.304 1.08 2.328 2.64h-1.608c0-.288-.048-.6-.168-.84-.096-.192-.264-.264-.528-.264-.48 0-.72.264-.72.84s.288.888.792 1.08c.696.288 1.608.744 1.92 1.296.264.432.408.984.408 1.656.024 1.608-.888 2.592-2.472 2.592-1.68 0-2.424-1.056-2.448-2.688h1.68c0 .744.264 1.176.792 1.176.264 0 .456-.072.552-.24.216-.312.264-1.176-.048-1.512-.288-.408-.888-.6-1.32-.816-.552-.264-.96-.576-1.2-.936s-.36-.888-.36-1.536c-.024-1.44.912-2.472 2.4-2.448m-11.031.018c.711-.006 1.419.198 1.839.63.432.432.672 1.128.648 1.992H9.336c.024-.456-.096-.792-.432-.96-.312-.144-.768-.048-.888.24-.12.264-.192.576-.168.864v3.504c0 .744.264 1.128.768 1.128a.65.65 0 0 0 .552-.264c.168-.24.192-.552.168-.84h1.776c.096 1.632-.984 2.712-2.568 2.688-1.536 0-2.496-.864-2.472-2.472v-4.032c0-.816.24-1.44.696-1.848.432-.408 1.146-.624 1.857-.63"}};
+// CSS color gula protibar getComputedStyle na kore cache e rakhi; theme bodlale refresh
+const cssCache = {};
+const css = n => (n in cssCache) ? cssCache[n] : (cssCache[n] = getComputedStyle(document.documentElement).getPropertyValue(n).trim());
+const clearCssCache = () => { for (const k in cssCache) delete cssCache[k]; };
+new MutationObserver(clearCssCache).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', clearCssCache);
+// phone / durbol device chinte
+const lowPower = matchMedia('(pointer:coarse)').matches || innerWidth < 860 || (navigator.hardwareConcurrency || 8) <= 4;
+
+/* ---------- theme ---------- */
+const root = document.documentElement;
+try { const t = localStorage.getItem('ss-theme'); if (t) root.dataset.theme = t; } catch (e) {}
+$('#themeBtn').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches || !matchMedia('(prefers-color-scheme: light)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('ss-theme', root.dataset.theme); } catch (e) {}
+  drawAllMinis();
+});
+
+/* ---------- menu ---------- */
+const nav = $('#nav'), menuBtn = $('#menuBtn');
+menuBtn.addEventListener('click', () => { const o = nav.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', o); });
+$$('#nav a').forEach(a => a.addEventListener('click', () => { nav.classList.remove('open'); menuBtn.setAttribute('aria-expanded', false); }));
+
+/* ---------- intro: "Hi, this is" type hoye, tarpor naam uthe ashe, tarpor curtain upore chole jay ---------- */
+const intro = $('#intro');
+const startSite = () => document.documentElement.classList.add('go');
+let introClosed = false;
+const closeIntro = (fast) => {
+  if (introClosed) return; introClosed = true;
+  intro.classList.add('lift');
+  setTimeout(() => { intro.classList.add('out'); setTimeout(startSite, 450); }, fast ? 150 : 520);
+  setTimeout(() => { intro.classList.add('gone'); document.documentElement.style.overflow = ''; }, fast ? 1350 : 1750);
+};
+if (reduce) { intro.classList.add('gone'); startSite(); }
+else {
+  document.documentElement.style.overflow = 'hidden';
+  // naam ke okkhor e bhangi, 2 ta shobdo alada mask e
+  $('#inName').innerHTML = ['Sabik', 'Swanan'].map((word, w) => `<span class="in-word w${w + 1}" aria-hidden="true">${[...word].map((ch, i) => `<span class="in-l" style="--i:${i + w * 5}">${ch}</span>`).join('')}</span>`).join('');
+  // typing effect
+  const greet = 'Hi, this is', typeEl = $('#inType'); let t = 0;
+  const typer = setInterval(() => { typeEl.textContent = greet.slice(0, ++t); if (t >= greet.length) clearInterval(typer); }, 48);
+  setTimeout(() => intro.classList.add('show'), 620);
+  setTimeout(() => intro.classList.add('role'), 1150);
+  // 000 -> 100 counter
+  const total = 2000, t0 = performance.now();
+  const tick = now => {
+    const k = Math.min(1, (now - t0) / total), eased = 1 - Math.pow(1 - k, 3);
+    $('#inCount').textContent = String(Math.round(eased * 100)).padStart(3, '0');
+    $('#inBar').style.transform = `scaleX(${eased})`;
+    if (k < 1 && !introClosed) requestAnimationFrame(tick); else if (k >= 1) setTimeout(() => closeIntro(false), 250);
+  };
+  requestAnimationFrame(tick);
+  $('#inSkip').addEventListener('click', () => closeIntro(true));
+  addEventListener('keydown', ev => { if (ev.key === 'Escape' || ev.key === 'Enter') closeIntro(true); }, { once: true });
+}
+
+/* ---------- clock ---------- */
+const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const tick = () => $('#clock').textContent = fmt.format(new Date()) + ' BST';
+tick(); setInterval(tick, 1000);
+
+/* ---------- rotating role ---------- */
+const roles = ['machine learning', 'remote sensing', 'data science', 'full-stack web', 'computer graphics'];
+let ri = 0; const rot = $('#rot span');
+if (!reduce) setInterval(() => {
+  ri = (ri + 1) % roles.length;
+  rot.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(-60%)', opacity: 0 }], { duration: 260, easing: 'ease-in' }).onfinish = () => {
+    rot.textContent = roles[ri];
+    rot.animate([{ transform: 'translateY(60%)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  };
+}, 2400);
+
+/* ---------- hero contour map ---------- */
+const cv = $('#map'), ctx = cv.getContext('2d');
+// contour line gula alada offscreen canvas e, protibar na eke 4 frame e ekbar
+const layer = document.createElement('canvas'), lctx = layer.getContext('2d'); let layerAge = 99;
+const SEGS = [null, [3, 0], [0, 1], [3, 1], [1, 2], [3, 0, 1, 2], [0, 2], [3, 2], [2, 3], [0, 2], [0, 1, 2, 3], [1, 2], [1, 3], [0, 1], [0, 3], null];
+let W = 0, H = 0, DPR = 1, probe = { x: .72, y: .55, active: false }, t0 = performance.now(), mapVisible = true;
+// smooth value noise
+const perm = new Uint8Array(512); { const p = [...Array(256).keys()]; for (let i = 255; i > 0; i--) { const j = (Math.sin(i * 91.7) * 43758.5453 % 1 + 1) % 1 * (i + 1) | 0; [p[i], p[j]] = [p[j], p[i]]; } for (let i = 0; i < 512; i++) perm[i] = p[i & 255]; }
+const fade = t => t * t * (3 - 2 * t);
+const hash = (x, y) => perm[(perm[x & 255] + y) & 255] / 255;
+function vnoise(x, y) { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi; const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1); const u = fade(xf), v = fade(yf); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+const fbm = (x, y) => vnoise(x, y) * .55 + vnoise(x * 2.1, y * 2.1) * .3 + vnoise(x * 4.3, y * 4.3) * .15;
+const riverX = (yn, t) => .63 + .07 * Math.sin(yn * 5.2 + t * .00012) + .035 * Math.sin(yn * 11.5 - t * .0002);
+function resize() {
+  const r = cv.getBoundingClientRect(); DPR = Math.min(lowPower ? 1.25 : 1.5, devicePixelRatio || 1);
+  layer.width = Math.round(r.width * DPR); layer.height = Math.round(r.height * DPR); lctx.setTransform(DPR, 0, 0, DPR, 0, 0); layerAge = 99;
+  W = r.width; H = r.height; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+function terrain(nx, ny, t) {
+  const rx = riverX(ny, t); const d = Math.abs(nx - rx);
+  return fbm(nx * 3.2 + t * .00003, ny * 3.2) * .9 + Math.min(d * 2.4, .5) - .25;
+}
+function drawMap(t) {
+  const ice = css('--ice'), sig = css('--signal'), sand = css('--sand');
+  ctx.clearRect(0, 0, W, H);
+  const scan = ((t * .00012) % 1.3) - .15;
+  if (++layerAge >= (lowPower ? 6 : 4)) { layerAge = 0;
+  lctx.clearRect(0, 0, W, H);
+  const cell = W < 700 ? 18 : 12, cols = Math.ceil(W / cell) + 1, rows = Math.ceil(H / cell) + 1;
+  const g = new Float32Array(cols * rows);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) g[j * cols + i] = terrain(i * cell / W, j * cell / H, t);
+  lctx.lineWidth = 1;
+  for (let L = 0; L < 9; L++) {
+    const lv = .05 + L * .085;
+    lctx.beginPath();
+    for (let j = 0; j < rows - 1; j++) for (let i = 0; i < cols - 1; i++) {
+      const a = g[j * cols + i], b = g[j * cols + i + 1], c = g[(j + 1) * cols + i + 1], d = g[(j + 1) * cols + i];
+      const k = (a > lv) | (b > lv) << 1 | (c > lv) << 2 | (d > lv) << 3; if (k === 0 || k === 15) continue;
+      const x = i * cell, y = j * cell;
+      const e = [[x + cell * (lv - a) / (b - a), y], [x + cell, y + cell * (lv - b) / (c - b)], [x + cell * (lv - d) / (c - d), y + cell], [x, y + cell * (lv - a) / (d - a)]];
+      const segs = SEGS[k];
+      for (let s = 0; s < segs.length; s += 2) { lctx.moveTo(e[segs[s]][0], e[segs[s]][1]); lctx.lineTo(e[segs[s + 1]][0], e[segs[s + 1]][1]); }
+    }
+    lctx.strokeStyle = ice; lctx.globalAlpha = .08 + L * .022; lctx.stroke();
+  }
+  lctx.globalAlpha = 1; }
+  ctx.drawImage(layer, 0, 0, W, H);
+  // scan band
+  if (!reduce) { const sx = scan * W; const gr = ctx.createLinearGradient(sx - 90, 0, sx + 10, 0); gr.addColorStop(0, 'transparent'); gr.addColorStop(1, sig); ctx.globalAlpha = .12; ctx.fillStyle = gr; ctx.fillRect(sx - 90, 0, 100, H); ctx.globalAlpha = .55; ctx.fillStyle = sig; ctx.fillRect(sx, 0, 1.2, H); }
+  // river channel
+  ctx.globalAlpha = 1; ctx.beginPath();
+  for (let y = 0; y <= H; y += 6) { const x = riverX(y / H, t) * W; y ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.strokeStyle = sig; ctx.globalAlpha = .18; ctx.lineWidth = 12; ctx.stroke(); ctx.globalAlpha = .35; ctx.lineWidth = 6; ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 3; ctx.stroke();
+  // erosion hotspots on outer bends
+  for (let y = 10; y < H; y += 22) {
+    const yn = y / H, x0 = riverX(yn, t), curv = riverX(yn + .01, t) + riverX(yn - .01, t) - 2 * x0;
+    const risk = Math.min(1, Math.abs(curv) * 900);
+    if (risk < .35) continue;
+    const side = curv > 0 ? -1 : 1; const px = x0 * W + side * 9;
+    ctx.globalAlpha = .25 + risk * .6; ctx.fillStyle = sand; ctx.beginPath(); ctx.arc(px, y, 2 + risk * 3, 0, 7); ctx.fill();
+  }
+  // probe
+  const px = probe.x * W, py = probe.y * H;
+  ctx.globalAlpha = .9; ctx.strokeStyle = ice; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.globalAlpha = .25; ctx.stroke(); ctx.setLineDash([]);
+  ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(px, py, 9, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fillStyle = ice; ctx.fill();
+  ctx.globalAlpha = 1;
+  updateProbe(t);
+}
+function updateProbe(t) {
+  const lat = 24.70 - probe.y * .5, lon = 89.50 + probe.x * .4;
+  const d = Math.abs(probe.x - riverX(probe.y, t)) * 40; // km across a ~40 km window
+  const yn = probe.y, x0 = riverX(yn, t), curv = riverX(yn + .01, t) + riverX(yn - .01, t) - 2 * x0;
+  const risk = Math.max(0, Math.min(.98, Math.exp(-d / 1.8) * (.45 + Math.min(1, Math.abs(curv) * 900) * .55)));
+  const sig4 = lat.toFixed(3) + lon.toFixed(3) + d.toFixed(2) + risk.toFixed(2); if (sig4 === updateProbe.lastSig) return; updateProbe.lastSig = sig4;
+  $('#pLat').textContent = lat.toFixed(3) + '° N'; $('#pLon').textContent = lon.toFixed(3) + '° E';
+  $('#pDist').textContent = d.toFixed(2) + ' km'; $('#pRisk').textContent = risk.toFixed(2); $('#pBar').style.width = (risk * 100) + '%';
+}
+let last = 0;
+function loop(now) {
+  if (mapVisible && !document.hidden && now - last > (lowPower ? 50 : 33)) { drawMap(now - t0); last = now; }
+  if (!probe.active) { probe.x = .72 + .05 * Math.sin(now * .0004); probe.y = .5 + .2 * Math.sin(now * .00027); }
+  requestAnimationFrame(loop);
+}
+resize(); drawMap(0);
+addEventListener('resize', () => { resize(); drawMap(performance.now() - t0); });
+const hero = $('.hero');
+hero.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); probe.x = (e.clientX - r.left) / r.width; probe.y = (e.clientY - r.top) / r.height; probe.active = true; if (reduce) drawMap(0); });
+hero.addEventListener('pointerleave', () => probe.active = false);
+new IntersectionObserver(es => mapVisible = es[0].isIntersecting).observe(hero);
+if (!reduce) requestAnimationFrame(loop);
+
+/* ---------- metrics count-up ---------- */
+const countUp = el => {
+  const target = +el.dataset.count, suf = el.dataset.suffix || '', k = el.dataset.fmt === 'k'; const st = performance.now();
+  const step = n => { const p = Math.min(1, (n - st) / 1400), v = Math.round(target * (1 - Math.pow(1 - p, 3)));
+    el.innerHTML = k ? Math.round(v / 1000) + '<em>K</em>' : v + (suf ? '<em>' + suf + '</em>' : ''); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+};
+if (!reduce) { const mo = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { countUp(e.target); mo.unobserve(e.target); } }), { threshold: .6 }); $$('[data-count]').forEach(el => mo.observe(el)); }
+
+/* ---------- research pipeline ---------- */
+const STAGES = [
+  { t: 'Satellite data', s: 'Google Earth Engine', h: 'Decades of the river, from orbit', p: 'The pipeline pulls multi-temporal satellite imagery and surface-water history for the Jamuna near Sirajganj through Google Earth Engine, running in Google Colab.', l: ['JRC Global Surface Water occurrence, 1984–2021', 'Prediction maps exported as GeoTIFF at 30 m and 60 m', 'Every layer clipped to the study area so maps stay aligned'], c: ['Earth Engine', 'Colab', 'GeoTIFF'] },
+  { t: 'Feature engineering', s: 'Leakage-free inputs', h: 'Features that do not cheat', p: 'Raw imagery becomes per-pixel features. One early feature used water occurrence from the full 1984–2021 record, which leaked the answer into the inputs. I found it and rebuilt it.', l: ['Caught and removed target leakage', 'Fixed spatial drift in map rendering', 'Features built only from data available before the prediction year'], c: ['pandas', 'NumPy', 'Earth Engine'] },
+  { t: 'Models', s: 'Random Forest + deep learning', h: 'A forest first, deep nets in support', p: 'A Random Forest is the primary model because it is fast, strong on tabular features and easy to explain. U-Net and CNN-LSTM models support it on the spatial and temporal side.', l: ['Random Forest as the primary predictor', 'U-Net for spatial segmentation', 'CNN-LSTM for change over time'], c: ['scikit-learn', 'TensorFlow'] },
+  { t: 'Explainability', s: 'SHAP', h: 'Showing why, not just what', p: 'SHAP values show which inputs push each prediction up or down, so a planner can see why a stretch of bank is flagged.', l: ['Global feature importance', 'Per-location explanations', 'Checks that the model learned river physics, not artefacts'], c: ['SHAP'] },
+  { t: 'Plain-language report', s: 'Local LLM + RAG', h: 'Maps people can actually read', p: 'An LLM layer with retrieval turns predictions into a short written report. It runs a local Qwen2.5-1.5B-Instruct model, so it needs no paid external API.', l: ['Retrieval-augmented report generation', 'Runs fully offline on a small open model', 'Designed for non-technical readers'], c: ['Qwen2.5', 'RAG'] },
+];
+const stagesEl = $('#stages'), detail = $('#stageDetail');
+STAGES.forEach((s, i) => {
+  const b = document.createElement('button'); b.className = 'stage'; b.type = 'button'; b.setAttribute('role', 'tab'); b.id = 'stage' + i;
+  b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span><b>${s.t}</b><small>${s.s}</small></span>`;
+  b.addEventListener('click', () => showStage(i)); stagesEl.appendChild(b);
+});
+function showStage(i) {
+  $$('.stage').forEach((b, j) => { b.classList.toggle('on', i === j); b.setAttribute('aria-selected', i === j); });
+  const s = STAGES[i];
+  detail.innerHTML = `<p class="mono" style="color:var(--signal)">STAGE ${String(i + 1).padStart(2, '0')} / 05</p><h3>${s.h}</h3><p>${s.p}</p><ul>${s.l.map(x => `<li>${x}</li>`).join('')}</ul><div class="chips">${s.c.map(x => `<span class="chip">${x}</span>`).join('')}</div>`;
+}
+showStage(0);
+
+/* ---------- projects ---------- */
+const PROJECTS = [
+  { id: 'flood', cat: 'ml', kind: 'Machine learning · CSE437', title: 'Flood Probability Prediction', blurb: 'Predicts flood probability for 50,000 regions from 20 climate, land-use and governance risk factors, and benchmarks four regressors.', result: 'KNN wins · <em>R² 0.778</em> · RMSE 0.024', repo: 'https://github.com/sabikswanan/Flood-Probability-Prediction-Using-ML',
+    problem: 'How well can machine learning predict a region\'s flood probability from 20 risk scores?', approach: ['Explored 50,000 rows: no missing values, no duplicates, full correlation matrix', '80/20 train–test split, StandardScaler fitted on training data only', 'Compared SVR, Decision Tree, Random Forest and KNN on R², MAE and RMSE'], results: ['KNN: R² 0.778, MAE 0.019, RMSE 0.024', 'Random Forest 0.732, SVR 0.709, Decision Tree 0.135', 'Every factor correlates with the target at r ≈ 0.22, so no single factor dominates'], stack: ['Python', 'scikit-learn', 'pandas', 'Seaborn'] },
+  { id: 'travel', cat: 'web', kind: 'Full-stack web · CSE471', title: 'Travel and Tourism Platform', blurb: 'MERN booking platform with Gemini AI itineraries, interactive Leaflet maps, live currency rates, wallet refunds and role-based dashboards.', result: '<em>36</em> REST endpoints · 3 user roles', repo: 'https://github.com/sabikswanan/Travel-and-Tourism-Website', live: 'https://travel-and-tourism-website-chi.vercel.app',
+    problem: 'A travel agency needs one place where travellers book trips and agents manage packages, bookings and sales.', approach: ['React 19 + Vite + Tailwind frontend, Express 5 + MongoDB backend', 'JWT auth with traveller, agent and admin roles', 'Gemini generates day-by-day itineraries, Pexels supplies photos, Leaflet maps every stop'], results: ['36 REST endpoints across 10 route modules', 'Automatic refunds by cancellation date: 90%, 50% or 0%, credited to a wallet', 'Prices in 8 currencies from live exchange rates'], stack: ['React', 'Express', 'MongoDB', 'Gemini API', 'Leaflet'] },
+  { id: 'tank', cat: 'graphics', kind: 'Computer graphics · CSE423', title: 'Tank Battle 3D', blurb: 'Wave-based 3D tank defense game built from scratch: arcing shell physics, enemy AI, power-ups, a minimap and two camera modes.', result: '~1,000 lines · <em>zero</em> game engine', repo: 'https://github.com/sabikswanan/Tank-Battle-',
+    problem: 'Build a complete 3D game using only the OpenGL and GLUT calls from the course labs.', approach: ['Delta-time game loop in GLUT idle(), so motion is frame-rate independent', 'Shells carry a 3D velocity and fall under gravity to form an arc', 'Enemies target the nearer of the tank or the base and fire from range'], results: ['14 features including power-ups, minimap, HP capsules and orbit/follow cameras', 'Endless waves that grow by one enemy each round', 'Everything drawn from primitives, with no textures or engine'], stack: ['Python', 'PyOpenGL', 'GLUT'] },
+  { id: 'transit', cat: 'networks', kind: 'Computer networks · CSE421', title: 'Smart Transit Network', blurb: 'Six-site transit network with VLSM addressing, RIP plus static routing, a floating static backup path and DHCP, DNS, web and email services.', result: '6 routers · 12 subnets · <em>auto failover</em>', repo: 'https://github.com/sabikswanan/Smart-Transit-Network-System',
+    problem: 'Connect six transit sites so every host reaches shared services, with a backup path if the main one fails.', approach: ['VLSM plan inside 17.17.0.0–17.17.4.87, largest subnets first', 'RIP in the core, static routes at stub sites, redistributed into RIP', 'Floating static routes (AD 130) on a passive DPC–PSC link'], results: ['6 routers, 7 switches and 23 end devices', 'DHCP, DNS, HTTP and SMTP/POP3 services', 'Traffic fails over automatically when the RIP path drops'], stack: ['Cisco Packet Tracer', 'VLSM', 'RIP', 'DHCP'] },
+];
+const grid = $('#projGrid');
+PROJECTS.forEach(p => {
+  const a = document.createElement('article'); a.className = 'proj reveal'; a.dataset.cat = p.cat; a.dataset.cursor = 'open';
+  a.innerHTML = `<canvas data-mini="${p.id}" aria-hidden="true"></canvas><div class="body"><p class="kind mono">${p.kind}</p><h3>${p.title}</h3><p>${p.blurb}</p><p class="result">${p.result}</p><div class="acts"><button class="btn fill sm" type="button" data-open="${p.id}">Case study</button><a class="btn ghost sm" href="${p.repo}" target="_blank" rel="noopener">GitHub ↗</a>${p.live ? `<a class="btn ghost sm" href="${p.live}" target="_blank" rel="noopener">Live ↗</a>` : ''}</div></div>`;
+  grid.appendChild(a);
+});
+$$('.filter').forEach(b => b.addEventListener('click', () => {
+  $$('.filter').forEach(x => x.setAttribute('aria-pressed', x === b)); const f = b.dataset.f;
+  $$('.proj').forEach(p => p.hidden = !(f === 'all' || p.dataset.cat === f)); drawAllMinis();
+}));
+const dlg = $('#case');
+$$('[data-open]').forEach(b => b.addEventListener('click', () => {
+  const p = PROJECTS.find(x => x.id === b.dataset.open);
+  $('#caseIn').innerHTML = `<div class="case-top"><div><p class="mono" style="color:var(--signal)">${p.kind}</p><h3 id="caseTitle">${p.title}</h3></div><button class="icon-btn" type="button" id="caseClose" aria-label="Close case study"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div><h4>The problem</h4><p>${p.problem}</p></div>
+  <div class="case-cols"><div><h4>Approach</h4><ul>${p.approach.map(x => `<li>${x}</li>`).join('')}</ul></div><div><h4>Results</h4><ul>${p.results.map(x => `<li>${x}</li>`).join('')}</ul></div></div>
+  <div class="chips">${p.stack.map(x => `<span class="chip">${x}</span>`).join('')}</div>
+  <div class="cta"><a class="btn fill sm" href="${p.repo}" target="_blank" rel="noopener">View on GitHub ↗</a>${p.live ? `<a class="btn ghost sm" href="${p.live}" target="_blank" rel="noopener">Live demo ↗</a>` : ''}</div>`;
+  $('#caseClose').addEventListener('click', () => dlg.close());
+  dlg.showModal();
+}));
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+
+/* mini visuals on project cards */
+const minis = {};
+function sizeMini(c) { const r = c.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); c.width = r.width * d; c.height = r.height * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, r.width, r.height]; }
+const MINI = {
+  flood(c, t) { // R² bars to scale
+    const [x, w, h] = sizeMini(c), ice = css('--ice'), muted = css('--muted'), sand = css('--sand'), fg = css('--fg');
+    const data = [['KNN', .778], ['Random Forest', .732], ['SVR', .709], ['Decision Tree', .135]];
+    const left = 118, right = 56, top = 22, bh = 22, gap = 14, p = reduce ? 1 : Math.min(1, t / 1200);
+    x.font = '500 12px "IBM Plex Mono", monospace'; x.textBaseline = 'middle';
+    data.forEach(([n, v], i) => { const y = top + i * (bh + gap), bw = (w - left - right) * v * (1 - Math.pow(1 - p, 3));
+      x.fillStyle = muted; x.textAlign = 'right'; x.fillText(n, left - 10, y + bh / 2);
+      x.fillStyle = i === 0 ? sand : ice; x.globalAlpha = i === 0 ? 1 : .55; x.beginPath(); x.roundRect(left, y, Math.max(2, bw), bh, 6); x.fill(); x.globalAlpha = 1;
+      x.fillStyle = fg; x.textAlign = 'left'; x.fillText(v.toFixed(3), left + bw + 8, y + bh / 2); });
+    return p < 1;
+  },
+  travel(c, t) { // route across stops
+    const [x, w, h] = sizeMini(c), ice = css('--ice'), sig = css('--signal'), sand = css('--sand'), muted = css('--muted');
+    const pts = [[.1, .7], [.3, .35], [.52, .6], [.72, .28], [.9, .5]].map(([a, b]) => [a * w, b * h]);
+    x.strokeStyle = muted; x.globalAlpha = .25; for (let i = 0; i < 40; i++) { x.beginPath(); x.arc((i * 73 % 100) / 100 * w, (i * 37 % 100) / 100 * h, 1.2, 0, 7); x.stroke(); } x.globalAlpha = 1;
+    x.setLineDash([5, 6]); x.strokeStyle = ice; x.lineWidth = 1.6; x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(...p) : x.moveTo(...p)); x.stroke(); x.setLineDash([]);
+    const k = reduce ? 0.999 : Math.min(.999, Math.max(0, ((t / 4000) % 1 + 1) % 1)), seg = k * (pts.length - 1), si = Math.floor(seg), f = seg - si, a = pts[si], b = pts[si + 1];
+    pts.forEach((p, i) => { x.beginPath(); x.arc(p[0], p[1], i === pts.length - 1 ? 7 : 5, 0, 7); x.fillStyle = i === pts.length - 1 ? sand : sig; x.fill(); });
+    x.beginPath(); x.arc(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 4, 0, 7); x.fillStyle = css('--fg'); x.fill();
+    x.font = '500 11px "IBM Plex Mono", monospace'; x.fillStyle = muted; x.fillText('BOOK → PAY → CONFIRM', 14, h - 14);
+    return true;
+  },
+  tank(c, t) { // projectile arc under gravity
+    const [x, w, h] = sizeMini(c), ice = css('--ice'), sand = css('--sand'), muted = css('--muted'), fg = css('--fg');
+    const g = h - 26; x.strokeStyle = muted; x.globalAlpha = .4; x.beginPath(); x.moveTo(0, g); x.lineTo(w, g); x.stroke(); x.globalAlpha = 1;
+    x.fillStyle = ice; x.fillRect(26, g - 16, 34, 14); x.fillRect(38, g - 24, 14, 9); x.fillRect(50, g - 21, 22, 3);
+    x.fillStyle = sand; x.fillRect(w - 70, g - 14, 30, 12); x.fillRect(w - 62, g - 21, 12, 8);
+    const T = 1.4, k = reduce ? .6 : ((t / 1000) % (T + .5)) / T, vx = (w - 140) / T, vz = 0.5 * 500 * T * .55;
+    x.setLineDash([3, 5]); x.strokeStyle = fg; x.globalAlpha = .35; x.beginPath();
+    for (let s = 0; s <= 1.0001; s += .02) { const tt = s * T, px = 74 + vx * tt, pz = vz * tt - 250 * tt * tt * .55; s ? x.lineTo(px, g - 22 - pz * .35) : x.moveTo(px, g - 22 - pz * .35); }
+    x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+    if (k <= 1) { const tt = k * T, px = 74 + vx * tt, pz = vz * tt - 250 * tt * tt * .55; x.beginPath(); x.arc(px, g - 22 - pz * .35, 4, 0, 7); x.fillStyle = fg; x.fill(); }
+    else { x.beginPath(); x.arc(w - 55, g - 12, 6 + (k - 1) * 40, 0, 7); x.fillStyle = sand; x.globalAlpha = Math.max(0, 1 - (k - 1) * 3); x.fill(); x.globalAlpha = 1; }
+    x.font = '500 11px "IBM Plex Mono", monospace'; x.fillStyle = muted; x.fillText('GRAV = 500', 14, 20);
+    return true;
+  },
+  transit(c, t) { // topology with packets and failover link
+    const [x, w, h] = sizeMini(c), ice = css('--ice'), sig = css('--signal'), sand = css('--sand'), muted = css('--muted'), fg = css('--fg');
+    const N = { CCH: [.2, .32], PSC: [.55, .25], DPC: [.32, .72], FDU: [.6, .78], RSP: [.86, .72], DAU: [.86, .28] };
+    const P = k => [N[k][0] * w, N[k][1] * h];
+    const L = [['CCH', 'PSC'], ['CCH', 'DPC'], ['DPC', 'FDU'], ['FDU', 'RSP'], ['PSC', 'DAU']];
+    x.lineWidth = 1.6; L.forEach(([a, b]) => { x.strokeStyle = ice; x.globalAlpha = .5; x.beginPath(); x.moveTo(...P(a)); x.lineTo(...P(b)); x.stroke(); });
+    x.globalAlpha = 1; x.setLineDash([5, 5]); x.strokeStyle = sand; x.beginPath(); x.moveTo(...P('DPC')); x.lineTo(...P('PSC')); x.stroke(); x.setLineDash([]);
+    const k = reduce ? .5 : (t / 2600) % 1; L.forEach(([a, b], i) => { const kk = (k + i * .2) % 1, A = P(a), B = P(b); x.beginPath(); x.arc(A[0] + (B[0] - A[0]) * kk, A[1] + (B[1] - A[1]) * kk, 2.6, 0, 7); x.fillStyle = sig; x.fill(); });
+    x.font = '600 10px "IBM Plex Mono", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    Object.keys(N).forEach(n => { const [px, py] = P(n); x.fillStyle = css('--deep'); x.strokeStyle = (n === 'DAU' || n === 'RSP') ? sand : ice; x.beginPath(); x.roundRect(px - 22, py - 11, 44, 22, 6); x.fill(); x.stroke(); x.fillStyle = fg; x.fillText(n, px, py); });
+    x.textAlign = 'left'; x.fillStyle = muted; x.fillText('- - backup (AD 130)', 14, h - 12);
+    return true;
+  },
+};
+let miniVisible = new Set(), miniStart = {};
+function drawAllMinis() { $$('canvas[data-mini]').forEach(c => { const id = c.dataset.mini; if (c.offsetParent) MINI[id](c, reduce || !miniStart[id] ? 99999 : performance.now() - miniStart[id]); }); }
+const mio = new IntersectionObserver(es => es.forEach(e => { const id = e.target.dataset.mini; if (e.isIntersecting) { miniVisible.add(id); if (!miniStart[id]) miniStart[id] = performance.now(); } else miniVisible.delete(id); }), { threshold: .35 });
+$$('canvas[data-mini]').forEach(c => mio.observe(c));
+drawAllMinis();
+if (!reduce) { let lm = 0; const ml = n => { if (n - lm > 40) { lm = n; $$('canvas[data-mini]').forEach(c => { const id = c.dataset.mini; if (miniVisible.has(id) && c.offsetParent) MINI[id](c, n - miniStart[id]); }); } requestAnimationFrame(ml); }; requestAnimationFrame(ml); }
+addEventListener('resize', drawAllMinis);
+
+/* ---------- terminal ---------- */
+const out = $('#tout');
+const esc = s => s.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+const CMD = {
+  help: () => `<span class="k">Available commands</span>\n  whoami      who I am\n  projects    what I've built\n  thesis      my research in one paragraph\n  skills      tools I use\n  contact     how to reach me\n  resume      open my résumé\n  social      links\n  clear       clear the screen\n  <span class="d">…and maybe a hidden one</span>`,
+  whoami: () => `Sabik Swanan · CS undergraduate @ BRAC University, Dhaka\nFocus: machine learning, remote sensing, full-stack web\nStatus: <span class="s">open to ML, data and software opportunities</span>`,
+  projects: () => PROJECTS.map(p => `<span class="k">${p.title.padEnd(30)}</span> ${p.result.replace(/<[^>]+>/g, '')}`).join('\n') + `\n<span class="d">Scroll up to "Selected work" for case studies.</span>`,
+  thesis: () => `Predicting riverbank erosion on the Jamuna from multi-temporal satellite data.\nRandom Forest (primary) + U-Net / CNN-LSTM, explained with SHAP,\nreported in plain language by a local Qwen2.5 LLM. Status: <span class="s">in progress</span>`,
+  skills: () => `ML/data   python · scikit-learn · tensorflow · pandas · numpy · earth engine\nweb       react · node · express · mongodb · tailwind · gemini api\nother     opengl · cisco packet tracer · git · sql · c`,
+  contact: () => `email     sabikswanan@gmail.com\nlinkedin  <a href="https://www.linkedin.com/in/sabikswanan" target="_blank" rel="noopener">linkedin.com/in/sabikswanan</a>`,
+  social: () => `<a href="https://github.com/sabikswanan" target="_blank" rel="noopener">github.com/sabikswanan</a>\n<a href="https://www.linkedin.com/in/sabikswanan" target="_blank" rel="noopener">linkedin.com/in/sabikswanan</a>\n<a href="https://codeforces.com/profile/SabikSwanan" target="_blank" rel="noopener">codeforces.com/profile/SabikSwanan</a>`,
+  resume: () => `<a href="Sabik_Swanan_CV.pdf" target="_blank" rel="noopener" data-cv>Open Sabik_Swanan_CV.pdf ↗</a>`,
+  'sudo hire sabik': () => `<span class="s">[sudo] permission granted.</span>\nGreat choice. Send the offer to sabikswanan@gmail.com 🚀`,
+  ls: () => `about.md  thesis/  projects/  skills.json  contact.txt  Sabik_Swanan_CV.pdf`,
+  date: () => fmt.format(new Date()) + ' BST, Dhaka',
+};
+function run(cmd, echo = true) {
+  const c = cmd.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (echo) out.insertAdjacentHTML('beforeend', `<span class="p">sabik@bracu:~$</span> ${esc(cmd)}\n`);
+  if (!c) return;
+  if (c === 'clear') { out.innerHTML = ''; return; }
+  const f = CMD[c] || (c.startsWith('sudo') ? () => `Nice try. Hint: <span class="k">sudo hire sabik</span>` : null);
+  out.insertAdjacentHTML('beforeend', (f ? f() : `command not found: ${esc(c)}. Type <span class="k">help</span>.`) + '\n\n');
+  out.scrollTop = out.scrollHeight;
+}
+out.innerHTML = `<span class="d">Welcome to sabik's terminal. Type "help" to begin.</span>\n\n`;
+run('whoami'); run('projects');
+$('#tform').addEventListener('submit', e => { e.preventDefault(); const v = $('#tcmd').value; $('#tcmd').value = ''; run(v); });
+['help', 'thesis', 'skills', 'contact', 'resume', 'sudo hire sabik', 'clear'].forEach(h => { const b = document.createElement('button'); b.className = 'hint'; b.type = 'button'; b.textContent = h; b.addEventListener('click', () => run(h)); $('#hints').appendChild(b); });
+
+/* ---------- skills ---------- */
+const GROUPS = [
+  ['Machine learning and data', ['python', 'scikitlearn', 'tensorflow', 'pandas', 'numpy', 'jupyter', 'googleearthengine', 'googlecolab', 'kaggle']],
+  ['Web and databases', ['react', 'nodedotjs', 'express', 'tailwindcss', 'vite', 'mongodb', 'postgresql', 'mysql', 'googlegemini', 'javascript', 'html5', 'css']],
+  ['Graphics, systems and tools', ['opengl', 'cisco', 'c', 'git', 'github', 'vercel', 'figma', 'codeforces']],
+];
+const DARK = { pandas: '#FFCA00', numpy: '#4DABCF', express: '#FFFFFF', github: '#FFFFFF', vercel: '#FFFFFF', c: '#A8B9CC' };
+const sgEl = $('#skillGroups');
+GROUPS.forEach(([title, slugs]) => {
+  const d = document.createElement('div'); d.className = 'sg reveal';
+  d.innerHTML = `<h3>${title}</h3><ul>${slugs.map(s => { const i = ICONS[s]; return `<li class="sk" style="--c:#${i.hex};${DARK[s] ? `--cd:${DARK[s]}` : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${i.path}"/></svg>${i.name}</li>`; }).join('')}</ul>`;
+  sgEl.appendChild(d);
+});
+/* ---------- certificate gallery ---------- */
+// chhobi gula certs/ folder e rakhle nije nije boshe jabe; na thakle designed cover dekhabe
+const DC = 'https://www.datacamp.com/completed/statement-of-accomplishment/course/';
+const CERTS = [
+  // [file, title, issuer · date, verify link, chhobir kon ongsho thumb e dekhabe]
+  ['dofe-bronze', 'The Duke of Edinburgh\'s International Award, Bronze', 'DofE Foundation · Mar 2023', '', '50% 52%'],
+  ['dc-reshaping-pandas', 'Reshaping Data with pandas', 'DataCamp · May 2025 · 4 hrs', DC + 'a1edf62c3cfc8516b2f90c484e564b5e66dfa70d', '50% 50%'],
+  ['dc-cleaning-data', 'Cleaning Data in Python', 'DataCamp · May 2025 · 4 hrs', DC + 'a0235567ac438700f6018a9ebec6d97b7483f406', '50% 50%'],
+  ['dc-intermediate-importing', 'Intermediate Importing Data in Python', 'DataCamp · Apr 2025 · 2 hrs', DC + '0da86f07f1497b49bc36044ecbab4b3d29e275be', '50% 50%'],
+  ['dc-intro-importing', 'Introduction to Importing Data in Python', 'DataCamp · Apr 2025 · 3 hrs', DC + 'e26b86b5041d54d5040f37a8aee5c8f69c83a565', '50% 50%'],
+  ['bizbee-promotion', 'Assistant Director, Organizing and Management', 'BIZ BEE · Letter of promotion · Apr 2023', '', '50% 40%'],
+];
+const dcPath = ICONS.datacamp.path;
+const medalSvg = '<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 4.2 12.6L17.5 22 12 19.3 6.5 22l1.3-7.4A7 7 0 0 1 12 2zm0 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>';
+CERTS.forEach(([slug, title, issuer, url, focus]) => {
+  const card = document.createElement('article'); card.className = 'cert reveal';
+  const seal = slug.startsWith('dc') ? `<svg viewBox="0 0 24 24"><path d="${dcPath}"/></svg>` : medalSvg;
+  card.innerHTML = `<button class="cert-thumb" type="button" aria-label="View certificate: ${title}">
+      <span class="cert-cover"><small>${issuer.split(' · ')[0]}</small><span class="seal">${seal}</span><em>${url ? 'Click to verify' : 'Certificate'}</em></span>
+      <img src="certs/thumb/${slug}.jpg" alt="${title} certificate" decoding="async" style="object-position:${focus}"><span class="cert-view">View ⤢</span>
+    </button>
+    <div class="cert-meta"><h4>${title}</h4><p>${issuer.toUpperCase()}</p>${url ? `<a href="${url}" target="_blank" rel="noopener">Verify ↗</a>` : ''}</div>`;
+  const thumb = card.querySelector('.cert-thumb'), pic = thumb.querySelector('img');
+  pic.addEventListener('load', () => thumb.classList.add('has'));
+  pic.addEventListener('error', () => pic.remove());
+  if (pic.complete && pic.naturalWidth) thumb.classList.add('has'); // cache theke age e load hoye gele
+  thumb.addEventListener('click', () => {
+    // chhobi thakle lightbox, na thakle sorasori verify link
+    if (!thumb.classList.contains('has')) { if (url) window.open(url, '_blank', 'noopener'); return; }
+    $('#lbTitle').textContent = title; $('#lbImg').src = 'certs/' + slug + '.jpg'; $('#lbImg').alt = title + ' certificate';
+    const v = $('#lbVerify'); v.hidden = !url; if (url) v.href = url;
+    $('#lightbox').showModal();
+  });
+  $('#certGallery').appendChild(card);
+});
+$('#lbClose').addEventListener('click', () => $('#lightbox').close());
+// page load er por full size certificate gula age thekei niye rakhi, jate tap korle sathe sathe khule
+addEventListener('load', () => setTimeout(() => CERTS.forEach(([slug]) => { new Image().src = 'certs/' + slug + '.jpg'; }), 1200));
+$('#lightbox').addEventListener('click', ev => { if (ev.target.id === 'lightbox') $('#lightbox').close(); });
+
+/* ---------- journey ---------- */
+const EVENTS = [
+  ['2018', 'Secondary School Certificate', 'Rajuk Uttara Model College · GPA 4.94 / 5.00'],
+  ['2020', 'Higher Secondary Certificate', 'Rajuk Uttara Model College · GPA 5.00 / 5.00'],
+  ['2022', 'Started B.Sc. in Computer Science', 'BRAC University, Dhaka'],
+  ['Mar 2023', 'The Duke of Edinburgh\'s International Award', 'Bronze Standard · awarded by The Duke of Edinburgh\'s International Award Foundation, associated with BRAC University'],
+  ['Apr 2023 – Jan 2024', 'Assistant Director, BIZ BEE', 'BRAC University Business Club · promoted to Assistant Director of Organizing and Management'],
+  ['Nov 2023', 'Volunteer, International Coastal Cleanup', 'Kewkradong Bangladesh, Ocean Conservancy and The Coca-Cola Company · a two-day beach cleanup in Cox\'s Bazar during Cyclone Midhili'],
+  ['2025 – 26', 'Four shipped projects', 'Flood prediction ML, a MERN travel platform, a six-site network and a 3D OpenGL game'],
+  ['2026', 'Thesis: riverbank erosion prediction', 'Satellite data, ML/DL, SHAP and a local LLM report layer · in progress'],
+];
+const tl = $('#timeline');
+EVENTS.forEach(([y, h, p]) => tl.insertAdjacentHTML('beforeend', `<div class="ev reveal"><span class="yr">${y}</span><div><h3>${h}</h3><p>${p}</p></div></div>`));
+
+/* ---------- contact ---------- */
+const MAIL = 'sabikswanan@gmail.com';
+$('#copyMail').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(MAIL); $('#copyToast').textContent = 'Copied to clipboard'; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('#mailText')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#copyToast').textContent = 'Selected. Press Ctrl+C to copy'; }
+  setTimeout(() => $('#copyToast').textContent = '', 2600);
+});
+const updMail = () => {
+  const name = $('#mName').value.trim(), sub = $('#mSub').value.trim(), body = $('#mBody').value.trim();
+  $('#mSend').href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + MAIL + '&su=' + encodeURIComponent(sub) + '&body=' + encodeURIComponent(body + (name ? '\n\n— ' + name : ''));
+};
+['#mName', '#mSub', '#mBody'].forEach(s => $(s).addEventListener('input', updMail)); updMail();
+$('#msgForm').addEventListener('submit', e => e.preventDefault());
+
+/* ---------- scroll: progress, nav, reveal, timeline ---------- */
+const prog = $('#progress'), navLinks = $$('#nav a'), secs = navLinks.map(a => $(a.getAttribute('href')));
+const onScroll = () => {
+  const h = document.documentElement; prog.style.transform = `scaleX(${h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)})`;
+  let cur = -1; secs.forEach((s, i) => { if (s && s.getBoundingClientRect().top < innerHeight * .4) cur = i; });
+  navLinks.forEach((a, i) => a.classList.toggle('on', i === cur));
+  const r = tl.getBoundingClientRect(); const f = Math.max(0, Math.min(1, (innerHeight * .7 - r.top) / r.height)); $('#tlFill').style.height = (f * (r.height - 12)) + 'px';
+};
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
+/* ---------- animation helpers ---------- */
+document.documentElement.classList.add('js');
+// ek grid er card gula pore pore ashbe
+$$('.reveal').forEach(el => {
+  const sibs = [...el.parentElement.children].filter(c => c.classList.contains('reveal'));
+  const idx = sibs.indexOf(el);
+  if (sibs.length > 1 && idx > 0) el.style.transitionDelay = (idx % 4) * 50 + 'ms';
+  el.addEventListener('transitionend', ev => { if (ev.propertyName === 'opacity') { el.style.transitionDelay = ''; el.classList.add('settled'); } });
+});
+const rio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } }), { rootMargin: '0px 0px 12% 0px' });
+$$('.reveal').forEach(el => { if (el.getBoundingClientRect().top < innerHeight) el.classList.add('in'); else rio.observe(el); });
+
+/* ---------- avatar photo (optional profile.jpg next to the page) ---------- */
+
+/* ---------- resume viewer ---------- */
+const cvDialog = $('#cvd');
+document.addEventListener('click', ev => {
+  const link = ev.target.closest('a[data-cv]');
+  if (!link) return;
+  ev.preventDefault();
+  cvDialog.showModal();
+});
+$('#cvdClose').addEventListener('click', () => cvDialog.close());
+cvDialog.addEventListener('click', ev => { if (ev.target === cvDialog) cvDialog.close(); });
+// claude.ai er bhitore normal download link block thake, tai downloads capability diye save kori;
+// nijer site e (Vercel etc.) window.claude nai, tokhon normal link ei download hobe
+let cvSaver = null;
+if (window.claude && typeof window.claude.use === 'function') {
+  window.claude.use('downloads').then(ns => { cvSaver = ns; }).catch(() => {});
+}
+$('#cvDownload').addEventListener('click', async ev => {
+  if (!cvSaver) return;
+  ev.preventDefault();
+  try {
+    const pdfBlob = await (await fetch('Sabik_Swanan_CV.pdf')).blob();
+    await cvSaver.save({ filename: 'Sabik_Swanan_CV.pdf', data: pdfBlob });
+  } catch (err) { /* viewer na bolle kichu korar nai */ }
+});
+// chhobi ekhon About card er <figure class="photo"> e sorasori load hoy
+
+
+/* ---------- premium smooth scroll ----------
+   PC (mouse/trackpad): wheel er scroll ke inertia diye mosrin kori (Lenis er moto, nijer code).
+   Phone: native momentum scroll e hat dei na (eta already shobcheye smooth), shudhu
+   link e click korle custom easing diye glide kore jay. Dono jaygay ek rokom feel. */
+(() => {
+  const root = document.documentElement;
+  const maxY = () => root.scrollHeight - innerHeight;
+  const clampY = v => Math.max(0, Math.min(maxY(), v));
+  const header = () => ($('header.top')?.offsetHeight || 64) + 8;
+  let cur = scrollY, target = scrollY, wheelRaf = 0, lastT = 0, glide = null;
+
+  // easing: shuru o shesh e naram (easeInOutQuart er kache)
+  const ease = t => t < .5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+
+  // link / button theke jekono jaygay glide
+  window.smoothTo = (y, opts = {}) => {
+    y = clampY(y);
+    if (reduce) { scrollTo(0, y); return; }
+    cancelAnimationFrame(wheelRaf); wheelRaf = 0;
+    const from = scrollY, dist = y - from;
+    const dur = opts.duration || Math.min(1400, 520 + Math.abs(dist) * .18);
+    const t0 = performance.now();
+    root.classList.add('lenis');
+    glide = { cancel: false };
+    const g = glide;
+    const step = now => {
+      if (g.cancel) return;
+      const k = Math.min(1, (now - t0) / dur);
+      const yy = from + dist * ease(k);
+      scrollTo(0, yy); cur = target = yy;
+      if (k < 1) requestAnimationFrame(step); else { glide = null; if (!finePointer) root.classList.remove('lenis'); }
+    };
+    requestAnimationFrame(step);
+  };
+  const stopGlide = () => { if (glide) { glide.cancel = true; glide = null; if (!finePointer) root.classList.remove('lenis'); } };
+  addEventListener('touchstart', stopGlide, { passive: true });
+  addEventListener('keydown', stopGlide);
+
+  // shob "#" link e custom glide (navbar, buttons, pit card link, sob)
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest('a[href^="#"]');
+    if (!a || ev.defaultPrevented || ev.metaKey || ev.ctrlKey) return;
+    const id = a.getAttribute('href');
+    const el = id === '#' || id === '#top' ? document.body : document.querySelector(id);
+    if (!el) return;
+    ev.preventDefault();
+    const y = el === document.body ? 0 : el.getBoundingClientRect().top + scrollY - header() + 1;
+    smoothTo(y);
+    history.replaceState(null, '', id);
+  });
+
+  // PC wheel inertia
+  const finePointer = matchMedia('(pointer:fine)').matches && !reduce;
+  if (!finePointer) return;
+  root.classList.add('lenis');
+  const scrollableParent = el => {
+    for (; el && el !== document.body && el !== root; el = el.parentElement) {
+      if (el.scrollHeight > el.clientHeight + 1) { const o = getComputedStyle(el).overflowY; if (o === 'auto' || o === 'scroll') return true; }
+    }
+    return false;
+  };
+  const tick = now => {
+    const dt = Math.min(64, now - (lastT || now)); lastT = now;
+    // frame-rate independent lerp, 60fps e ~0.11
+    const k = 1 - Math.pow(1 - .11, dt / 16.67 || 1);
+    cur += (target - cur) * k;
+    if (Math.abs(target - cur) < .4) { cur = target; scrollTo(0, cur); wheelRaf = 0; lastT = 0; return; }
+    scrollTo(0, cur);
+    wheelRaf = requestAnimationFrame(tick);
+  };
+  addEventListener('wheel', ev => {
+    if (ev.ctrlKey || ev.defaultPrevented) return;
+    if (root.style.overflow === 'hidden' || document.querySelector('dialog[open]')) return;
+    if (scrollableParent(ev.target)) return;
+    ev.preventDefault();
+    stopGlide();
+    let dy = ev.deltaY;
+    if (ev.deltaMode === 1) dy *= 36; else if (ev.deltaMode === 2) dy *= innerHeight;
+    if (!wheelRaf) cur = scrollY, target = scrollY;
+    target = clampY(target + dy);
+    if (!wheelRaf) wheelRaf = requestAnimationFrame(tick);
+  }, { passive: false });
+  // keyboard / scrollbar diye scroll korle amader state sync
+  addEventListener('scroll', () => { if (!wheelRaf && !glide) { cur = target = scrollY; } }, { passive: true });
+  addEventListener('resize', () => { target = clampY(target); });
+})();
+
+/* ---------- cursor ---------- */
+if (matchMedia('(pointer:fine)').matches && !reduce) {
+  const cur = $('#cur'); let cx = 0, cy = 0, tx = 0, ty = 0;
+  let curRun = false;
+  const cl = () => { cx += (tx - cx) * .22; cy += (ty - cy) * .22; cur.style.transform = `translate(${cx}px,${cy}px)`; if (Math.abs(tx - cx) + Math.abs(ty - cy) > .3) requestAnimationFrame(cl); else curRun = false; };
+  addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; cur.style.opacity = 1; cur.classList.toggle('big', !!e.target.closest('a,button,.proj,input,textarea')); if (!curRun) { curRun = true; requestAnimationFrame(cl); } }, { passive: true });
+  document.addEventListener('pointerleave', () => cur.style.opacity = 0);
+}
+
+
+/* ---------- coursework ball pit (nijer choto physics engine, kono library nai) ---------- */
+(() => {
+  const CAT = {
+    prog: ['Programming and theory', '#a5d8ff', '#06132b'],
+    sys: ['Systems', '#38bdf8', '#04203a'],
+    net: ['Networks', '#7dd3fc', '#06132b'],
+    data: ['Data and AI', '#1d4ed8', '#eaf2ff'],
+    build: ['Software and graphics', '#60a5fa', '#06132b'],
+    math: ['Mathematics', '#e0f2fe', '#0b1836'],
+    lang: ['Language and communication', '#0369a1', '#e8f4ff'],
+  };
+  // [id, ball e ja lekha thakbe (| mane notun line), puro naam, category, size, ki shikhechi, project id / link]
+  const COURSES = [
+    ['CSE110', 'Programming|I', 'Programming Language I', 'prog', 1, 'Python fundamentals, control flow and problem solving.'],
+    ['CSE111', 'Programming|II', 'Programming Language II', 'prog', 1, 'Object-oriented programming in Python.'],
+    ['CSE220', 'Data|Structures', 'Data Structures', 'prog', 1.05, 'Linked lists, stacks, queues, trees, heaps and hashing.'],
+    ['CSE221', 'Algorithms', 'Algorithms', 'prog', 1.05, 'Graph algorithms, greedy methods, divide and conquer and dynamic programming.'],
+    ['CSE230', 'Discrete|Math', 'Discrete Mathematics', 'prog', .95, 'Logic, sets, combinatorics and graph theory.'],
+    ['CSE331', 'Automata', 'Automata and Computability', 'prog', .95, 'Finite automata, grammars, Turing machines and what can be computed.'],
+    ['CSE330', 'Numerical|Methods', 'Numerical Methods', 'prog', .95, 'Root finding, interpolation and numerical solutions computed in code.'],
+    ['CSE260', 'Digital|Logic', 'Digital Logic Design', 'sys', .95, 'Boolean algebra, combinational and sequential circuits.'],
+    ['CSE340', 'Computer|Architecture', 'Computer Architecture', 'sys', 1, 'Instruction sets, datapaths, pipelining and memory hierarchy.'],
+    ['CSE321', 'Operating|Systems', 'Operating Systems', 'sys', 1.05, 'Processes, threads, scheduling and file systems, with xv6 kernel work.'],
+    ['CSE320', 'Data|Comms', 'Data Communications', 'net', .95, 'Signals, encoding, multiplexing and error control.'],
+    ['CSE421', 'Computer|Networks', 'Computer Networks', 'net', 1.15, 'Routing, VLANs, services and redundancy.', 'transit'],
+    ['CSE370', 'Database|Systems', 'Database Systems', 'data', 1, 'Relational design, normalisation and SQL.'],
+    ['CSE422', 'Artificial|Intelligence', 'Artificial Intelligence', 'data', 1.1, 'Search, adversarial games, probabilistic reasoning and core machine learning.'],
+    ['CSE437', 'Data|Science', 'Data Science: Coding with Real World Data', 'data', 1.15, 'The full data science workflow, from cleaning to model comparison.', 'flood'],
+    ['CSE400', 'Thesis', 'Undergraduate Thesis', 'data', 1.25, 'Riverbank erosion prediction with ML/DL, satellite data and an LLM report layer.', '#research'],
+    ['CSE423', 'Computer|Graphics', 'Computer Graphics', 'build', 1.15, 'Rendering, transformations and 3D scenes with OpenGL.', 'tank'],
+    ['CSE420', 'Compiler|Design', 'Compiler Design', 'prog', 1, 'Lexical analysis, parsing, semantic analysis and code generation.'],
+    ['CSE470', 'Software|Engineering', 'Software Engineering', 'build', 1.05, 'Software process, requirements, design patterns, testing and teamwork.'],
+    ['CSE471', 'System|Analysis|and Design', 'System Analysis and Design', 'build', 1.15, 'Requirements, UML, DFDs and building a full system as a team.', 'travel'],
+    ['MAT110', 'Calculus|I', 'Mathematics I: Differential Calculus and Coordinate Geometry', 'math', .9, 'Limits, derivatives and coordinate geometry.'],
+    ['MAT120', 'Calculus|II', 'Mathematics II: Integral Calculus and Differential Equations', 'math', .9, 'Integration techniques and ordinary differential equations.'],
+    ['MAT215', 'Complex|Variables', 'Mathematics III: Complex Variables and Laplace Transforms', 'math', .9, 'Complex analysis and Laplace transforms.'],
+    ['MAT216', 'Linear|Algebra', 'Mathematics IV: Linear Algebra and Fourier Analysis', 'math', .95, 'Vector spaces, matrices, eigenvalues and Fourier analysis, the maths under machine learning.'],
+    ['CHN101', 'Chinese|I', 'Elementary Chinese I', 'lang', .9, 'Introductory Mandarin Chinese: pinyin, tones, basic characters and everyday conversation.'],
+    ['BUS201', 'Business|Communication', 'Business and Human Communication', 'lang', .95, 'Professional writing, presentations and communicating in teams.'],
+    ['STA201', 'Statistics', 'Elements of Statistics and Probability', 'math', .95, 'Probability, distributions and statistical inference.'],
+  ];
+
+  const pit = $('#pit'), card = $('#pitCard');
+  $('#pitLegend').innerHTML = Object.values(CAT).map(([name, col]) => `<span style="--bc:${col}"><i></i>${name}</span>`).join('');
+
+  const balls = COURSES.map(([code, label, title, cat, size, about, link]) => {
+    const [, col, txt] = CAT[cat];
+    const el = document.createElement('div');
+    el.className = 'ball' + (link ? ' built' : '');
+    el.style.setProperty('--bc', col); el.style.setProperty('--bt', txt);
+    el.setAttribute('role', 'button'); el.tabIndex = 0;
+    el.setAttribute('aria-label', `${code} ${title}`);
+    el.innerHTML = `<small>${code.slice(0, 3)}</small><b>${code.slice(3)}</b>`;
+    pit.appendChild(el);
+    return { el, code, label, title, cat, size, about, link, x: 0, y: 0, vx: 0, vy: 0, r: 40, m: 1 };
+  });
+
+  // ball e tap korle niche detail card
+  const showCourse = b => {
+    balls.forEach(o => o.el.classList.toggle('sel', o === b));
+    let more = '';
+    if (b.link && b.link.startsWith('#')) more = ` <a href="${b.link}">See the research →</a>`;
+    else if (b.link) { const pr = PROJECTS.find(p => p.id === b.link); if (pr) more = ` Built here: <button class="lnk" type="button" data-proj="${pr.id}">${pr.title} →</button>`; }
+    card.innerHTML = `<span class="mono">${b.code} · ${CAT[b.cat][0]}</span><b>${b.title}</b><p>${b.about}${more}</p>`;
+    card.classList.add('on');
+    const pb = card.querySelector('[data-proj]');
+    if (pb) pb.addEventListener('click', () => { const open = document.querySelector(`[data-open="${pb.dataset.proj}"]`); if (open) open.click(); });
+  };
+
+  if (reduce) { pit.classList.add('static'); balls.forEach(b => { const d = Math.round(110 * b.size); b.el.style.width = b.el.style.height = d + 'px'; b.el.style.setProperty('--r', d / 2 + 'px'); b.el.addEventListener('click', () => showCourse(b)); }); return; }
+
+  let W = 0, H = 0;
+  const sizeBalls = () => {
+    W = pit.clientWidth; H = pit.clientHeight;
+    // screen choto hole ball o choto
+    const base = W < 560 ? Math.max(22, W / 13.5) : Math.max(30, Math.min(50, W / 20));
+    balls.forEach(b => { b.r = base * b.size; b.m = b.r * b.r; const d = b.r * 2; b.el.style.width = b.el.style.height = d + 'px'; b.el.style.setProperty('--r', b.r + 'px'); });
+  };
+  const dropIn = () => balls.forEach((b, i) => { b.x = b.r + Math.random() * (W - 2 * b.r); b.y = -b.r - i * 46 - Math.random() * 60; b.vx = (Math.random() - .5) * 4; b.vy = 0; });
+  sizeBalls(); dropIn();
+  addEventListener('resize', () => { sizeBalls(); balls.forEach(b => { b.x = Math.min(Math.max(b.x, b.r), W - b.r); }); });
+
+  // drag + throw
+  let held = null, px = 0, py = 0, moved = 0, lastT = 0;
+  const local = ev => { const r = pit.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+  balls.forEach(b => {
+    b.el.addEventListener('pointerdown', ev => { held = b; moved = 0; [px, py] = local(ev); lastT = performance.now(); b.el.setPointerCapture(ev.pointerId); b.el.classList.add('drag'); $('#pitHint').style.opacity = 0; });
+    b.el.addEventListener('pointermove', ev => {
+      if (held !== b) return;
+      const [nx, ny] = local(ev), now = performance.now(), dt = Math.max(8, now - lastT);
+      b.vx = (nx - px) / dt * 16; b.vy = (ny - py) / dt * 16; b.x = nx; b.y = ny; moved += Math.abs(nx - px) + Math.abs(ny - py); px = nx; py = ny; lastT = now;
+    });
+    const drop = () => { if (held !== b) return; held = null; b.el.classList.remove('drag'); if (moved < 6) showCourse(b); };
+    b.el.addEventListener('pointerup', drop); b.el.addEventListener('pointercancel', drop);
+    b.el.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showCourse(b); b.vy = -12; } });
+  });
+  $('#pitShake').addEventListener('click', () => balls.forEach(b => { b.vx += (Math.random() - .5) * 26; b.vy -= 10 + Math.random() * 12; }));
+
+  // physics: gravity, deyal, ball-ball dhakka
+  const G = .55, BOUNCE = .55, FRICTION = .992;
+  const step = () => {
+    for (const b of balls) {
+      if (b === held) continue;
+      b.vy += G; b.vx *= FRICTION; b.vy *= FRICTION; b.x += b.vx; b.y += b.vy;
+      if (b.y > H - b.r) { b.y = H - b.r; b.vy *= -BOUNCE; b.vx *= .96; if (Math.abs(b.vy) < 1) b.vy = 0; }
+      if (b.x < b.r) { b.x = b.r; b.vx *= -BOUNCE; }
+      if (b.x > W - b.r) { b.x = W - b.r; b.vx *= -BOUNCE; }
+    }
+    for (let k = 0; k < 8; k++) {
+      for (let i = 0; i < balls.length; i++) for (let j = i + 1; j < balls.length; j++) {
+      const a = balls[i], c = balls[j], dx = c.x - a.x, dy = c.y - a.y, min = a.r + c.r, d2 = dx * dx + dy * dy;
+      if (d2 >= min * min || d2 === 0) continue;
+      const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, overlap = min - d;
+      const wa = a === held ? 0 : (c === held ? 1 : c.m / (a.m + c.m)), wc = 1 - wa;
+      a.x -= nx * overlap * wa; a.y -= ny * overlap * wa; c.x += nx * overlap * wc; c.y += ny * overlap * wc;
+      const rel = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny;
+      if (rel < 0 && k === 0) { const imp = -(1 + .45) * rel / (1 / a.m + 1 / c.m); if (a !== held) { a.vx -= imp / a.m * nx; a.vy -= imp / a.m * ny; } if (c !== held) { c.vx += imp / c.m * nx; c.vy += imp / c.m * ny; } }
+      }
+      // protita round e ball deyal er bhitore fire ashe, jate kona e chaapa na pore
+      for (const o of balls) { o.x = Math.min(Math.max(o.x, o.r), W - o.r); o.y = Math.min(o.y, H - o.r); }
+    }
+    // dhakkar por o jate deyal er baire na jay
+    for (const b of balls) { b.x = Math.min(Math.max(b.x, b.r), W - b.r); b.y = Math.min(b.y, H - b.r); b.el.style.transform = `translate(${b.x - b.r}px,${b.y - b.r}px)`; }
+  };
+  // shudhu screen e thakle chole, CPU bachay
+  let running = false, raf = 0, started = false;
+  let quiet = 0;
+  const loop = () => { step(); const moving = held || balls.some(b => Math.abs(b.vx) + Math.abs(b.vy) > .08); quiet = moving ? 0 : quiet + 1; if (running && quiet < 40) raf = requestAnimationFrame(loop); else raf = 0; };
+  const wake = () => { quiet = 0; if (running && !raf) raf = requestAnimationFrame(loop); };
+  pit.addEventListener('pointerdown', wake); $('#pitShake').addEventListener('click', wake); addEventListener('resize', wake);
+  new IntersectionObserver(es => { running = es[0].isIntersecting; if (running) { if (!started) { started = true; dropIn(); } cancelAnimationFrame(raf); quiet = 0; raf = requestAnimationFrame(loop); } }, { rootMargin: '0px 0px -20% 0px' }).observe(pit);
+  step();
+})();
+
+/* ---------- extra motion ---------- */
+(() => {
+  // tech marquee: shob tool er icon ekta lomba strip e ghurte thake
+  const mqSlugs = [...new Set(GROUPS.flatMap(([, slugs]) => slugs))].filter(sl => ICONS[sl]);
+  const mqHtml = mqSlugs.map(sl => { const ic = ICONS[sl]; return `<span class="mq-item" style="--c:#${ic.hex};${DARK[sl] ? `--cd:${DARK[sl]}` : ''}"><svg viewBox="0 0 24 24"><path d="${ic.path}"/></svg>${ic.name}</span>`; }).join('');
+  $('#mqTrack').innerHTML = mqHtml + mqHtml;
+  new IntersectionObserver(es => $('#mqTrack').style.animationPlayState = es[0].isIntersecting ? 'running' : 'paused').observe($('.marquee'));
+
+  // back to top button, chaarpashe scroll progress ring
+  const topBtn = $('#toTop'), ring = $('#toTopRing');
+  const onTop = () => { const h = document.documentElement; const max = h.scrollHeight - innerHeight; const k = max > 0 ? scrollY / max : 0; ring.style.strokeDashoffset = 119.4 * (1 - k); topBtn.classList.toggle('on', scrollY > 600); };
+  addEventListener('scroll', onTop, { passive: true }); onTop();
+  topBtn.addEventListener('click', () => window.smoothTo ? smoothTo(0) : scrollTo(0, 0));
+
+  // hero naam ke okkhor e bhenge animation
+  let k = 0;
+  $$('.hero h1 span').forEach(sp => { const t = sp.textContent; sp.textContent = ''; sp.setAttribute('aria-label', t); [...t].forEach(c => { const ch = document.createElement('span'); ch.className = 'ch'; ch.setAttribute('aria-hidden', 'true'); ch.style.setProperty('--i', k++); ch.textContent = c; sp.appendChild(ch); }); });
+
+  // section title er shobdo gula alada span e
+  const tio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); tio.unobserve(e.target); } }), { rootMargin: '0px 0px 10% 0px' });
+  $$('.sec-title').forEach(h => {
+    if (h.children.length) return;
+    const words = h.textContent.trim().split(/\s+/);
+    h.innerHTML = words.map((w, i) => `<span class="w" style="--i:${i}">${w}</span>`).join(' ');
+    tio.observe(h);
+  });
+
+  // skill chip pop
+  const sio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('pop'); sio.unobserve(e.target); } }), { rootMargin: '0px 0px 10% 0px' });
+  $$('.sg').forEach(g => { g.querySelectorAll('li').forEach((li, i) => li.style.setProperty('--i', i)); sio.observe(g); });
+
+  // scroll progress
+  const bar = $('#prog');
+  const onScroll = () => { const h = document.documentElement; const max = h.scrollHeight - innerHeight; bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`; };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+
+  /* ---------- section transition: river divider + section number ---------- */
+  {
+    const NAMES = { about: 'About', focus: 'What I do', research: 'Research', work: 'Work', terminal: 'Terminal', skills: 'Toolbox', courses: 'Coursework', journey: 'Journey', certs: 'Proof', contact: 'Contact' };
+    const blocks = $$('section.block');
+    // gradient ekbar e ekta lukano svg te
+    document.body.insertAdjacentHTML('beforeend', '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rgrad" x1="0" x2="1"><stop offset="0" stop-color="var(--signal)" stop-opacity=".2"/><stop offset=".5" stop-color="var(--signal)"/><stop offset="1" stop-color="var(--ice)"/></linearGradient></defs></svg>');
+    const items = blocks.map((sec, i) => {
+      // protita section e nodir dheu ektu alada, tai bar bar ek rokom lage na
+      const a = 8 + (i % 3) * 6, ph = i % 2 ? -1 : 1;
+      const d = `M0 28 C 200 ${28 - a * ph}, 400 ${28 + a * ph}, 600 28 S 1000 ${28 - a * ph}, 1200 28`;
+      const div = document.createElement('div'); div.className = 'rdiv'; div.setAttribute('aria-hidden', 'true');
+      div.innerHTML = `<svg viewBox="0 0 1200 56" preserveAspectRatio="none"><path class="base" d="${d}" vector-effect="non-scaling-stroke"/><path class="flow" d="${d}" pathLength="1" vector-effect="non-scaling-stroke"/></svg><span class="rprobe"></span>`;
+      const num = document.createElement('div'); num.className = 'secnum'; num.setAttribute('aria-hidden', 'true'); num.textContent = String(i + 1).padStart(2, '0');
+      sec.prepend(num); sec.prepend(div);
+      return { sec, path: div.querySelector('.flow'), probe: div.querySelector('.rprobe'), svg: div.querySelector('svg'), len: 0 };
+    });
+    const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+    const update = () => {
+      const vh = innerHeight;
+      for (const it of items) {
+        const r = it.sec.getBoundingClientRect();
+        if (r.bottom < -100 || r.top > vh + 100) continue;
+        // section er top screen er nich theke 30% porjonto ashte ashte line puro ake
+        const p = reduce ? 1 : clamp01((vh - r.top) / (vh * .7));
+        const q = reduce ? 1 : clamp01((vh - r.top) / (vh * 1.1));
+        it.sec.style.setProperty('--p', p.toFixed(3)); it.sec.style.setProperty('--q', q.toFixed(3));
+        if (!reduce) {
+          if (!it.len) it.len = it.path.getTotalLength();
+          const pt = it.path.getPointAtLength(it.len * p), w = it.svg.clientWidth;
+          it.probe.style.transform = `translate(${pt.x / 1200 * w}px,${pt.y}px)`;
+        }
+      }
+    };
+    let rq = 0; addEventListener('scroll', () => { if (!rq) rq = requestAnimationFrame(() => { rq = 0; update(); }); }, { passive: true });
+    addEventListener('resize', update); update();
+  }
+
+  /* ---------- animation round 2 ---------- */
+  // click ripple (shob button e, phone eo)
+  document.addEventListener('pointerdown', ev => {
+    const b = ev.target.closest('.btn'); if (!b || reduce) return;
+    const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2, rp = document.createElement('span');
+    rp.className = 'ripple'; rp.style.cssText = `width:${d}px;height:${d}px;left:${ev.clientX - r.left}px;top:${ev.clientY - r.top}px`;
+    b.appendChild(rp); setTimeout(() => rp.remove(), 650);
+  });
+
+  // email ke okkhor e bhangi
+  const mail = $('#mailText');
+  if (mail) { const t = mail.textContent; mail.setAttribute('aria-label', t); mail.innerHTML = [...t].map((c, i) => `<span class="lt" aria-hidden="true" style="--i:${i}">${c}</span>`).join(''); }
+
+  // eyebrow gula screen e ashle random okkhor theke decode hoye ashe
+  const GLYPH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&/<>';
+  const decode = el => {
+    const final = el.dataset.text, n = final.length; let frame = 0;
+    const id = setInterval(() => {
+      frame++;
+      el.textContent = [...final].map((c, i) => (c === ' ' || i < frame / 2) ? c : GLYPH[Math.floor(Math.random() * GLYPH.length)]).join('');
+      if (frame / 2 >= n) { clearInterval(id); el.textContent = final; }
+    }, 28);
+  };
+  const eio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { decode(e.target); eio.unobserve(e.target); } }), { rootMargin: '0px 0px -5% 0px' });
+  if (!reduce) $$('.eyebrow').forEach(eb => {
+    const tn = [...eb.childNodes].find(nd => nd.nodeType === 3 && nd.textContent.trim());
+    if (!tn) return;
+    const sp = document.createElement('span'); sp.className = 'dec'; sp.dataset.text = tn.textContent.trim(); sp.textContent = tn.textContent.trim();
+    sp.setAttribute('aria-label', sp.dataset.text); eb.replaceChild(sp, tn); eio.observe(sp);
+  });
+
+  // nav er sliding pill
+  const navEl = $('#nav');
+  if (navEl) {
+    const ind = document.createElement('span'); ind.className = 'nav-ind'; navEl.appendChild(ind); navEl.classList.add('has-ind');
+    const moveTo = a => { if (!a) { ind.style.opacity = 0; return; } ind.style.opacity = 1; ind.style.width = a.offsetWidth + 'px'; ind.style.transform = `translateX(${a.offsetLeft}px)`; };
+    const toActive = () => moveTo(navEl.querySelector('a.on'));
+    navEl.querySelectorAll('a').forEach(a => a.addEventListener('pointerenter', () => moveTo(a)));
+    navEl.addEventListener('pointerleave', toActive);
+    let navRaf = 0; addEventListener('scroll', () => { cancelAnimationFrame(navRaf); navRaf = requestAnimationFrame(() => { if (!navEl.matches(':hover')) toActive(); }); }, { passive: true });
+    addEventListener('resize', toActive); setTimeout(toActive, 300);
+  }
+
+  if (reduce) return;
+  // hero: scroll korle puro lekha ta ekshathe dhire shore jay ar halka hoy (parallax).
+  // shob ekshathe nore, tai ek lekha arek lekhar upor uthe jay na
+  const heroEl = $('.hero'), heroWrap = $('.hero .wrap');
+  // phone e probe panel hero lekhar thik niche, tai parallax shudhu boro screen e
+  if (innerWidth > 860) addEventListener('scroll', () => {
+    const y = scrollY, hh = heroEl.offsetHeight; if (y > hh) return;
+    heroWrap.style.transform = `translateY(${y * .22}px)`; heroWrap.style.opacity = Math.max(0, 1 - (y / hh) * 1.2);
+  }, { passive: true });
+
+  // hero te mouse er pechone glow orb
+  const orb = $('#orb');
+  if (orb && matchMedia('(pointer:fine)').matches) {
+    let ox = 0, oy = 0, tx = 0, ty = 0;
+    let orbRun = false;
+    const follow = () => { ox += (tx - ox) * .08; oy += (ty - oy) * .08; orb.style.transform = `translate(${ox}px,${oy}px)`; if (Math.abs(tx - ox) + Math.abs(ty - oy) > .5) requestAnimationFrame(follow); else orbRun = false; };
+    heroEl.addEventListener('pointermove', ev => { const r = heroEl.getBoundingClientRect(); tx = ev.clientX - r.left - 260; ty = ev.clientY - r.top - 260; if (!orbRun) { orbRun = true; requestAnimationFrame(follow); } }, { passive: true });
+  }
+
+  if (reduce || !matchMedia('(pointer:fine)').matches) return;
+
+  // card e spotlight + halka 3D tilt
+  $$('.proj, .do, .cert').forEach(card => {
+    card.classList.add('spot');
+    if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+    const glow = document.createElement('span'); glow.className = 'glow'; card.appendChild(glow);
+    const tilt = !card.classList.contains('do');
+    card.addEventListener('pointermove', ev => {
+      const r = card.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+      card.style.setProperty('--mx', x * 100 + '%'); card.style.setProperty('--my', y * 100 + '%');
+      if (tilt && card.classList.contains('in')) { card.classList.add('tilting'); card.style.transform = `perspective(900px) rotateX(${(.5 - y) * 6}deg) rotateY(${(x - .5) * 8}deg) translateY(-4px)`; }
+    });
+    card.addEventListener('pointerleave', () => { card.classList.remove('tilting'); card.style.transform = ''; });
+  });
+
+  // magnetic button
+  $$('.btn').forEach(b => {
+    b.addEventListener('pointermove', ev => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(ev.clientX - r.left - r.width / 2) * .18}px,${(ev.clientY - r.top - r.height / 2) * .28}px)`; });
+    b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+  });
+})();
+})();
+</script>
